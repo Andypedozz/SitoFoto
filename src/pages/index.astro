@@ -1,29 +1,39 @@
 ---
-import About from "../components/About.astro";
-import Footer from "../components/Footer.astro";
-import Header from "../components/Header.astro";
-import Hero from "../components/Hero.astro";
-import Services from "../components/Services.astro";
-import Works from "../components/Works.astro";
+import About from "../components/Home/About.astro";
+import CTA from "../components/Home/CTA.astro";
+import Footer from "../components/Home/Footer.astro";
+import Gallery from "../components/Home/Gallery.astro";
+import Header from "../components/Home/Header.astro";
+import Hero from "../components/Home/Hero.astro";
+import Scripts from "../components/Home/Scripts.astro";
+import Services from "../components/Home/Services.astro";
 import Layout from "../layouts/Layout.astro";
-
-const headerLinks = [
-    { text: "Home", href: "/" },
-    { text: "About", href: "#about" },
-    { text: "Works", href: "#works" },
-    { text: "Services", href: "#services" },
-    { text: "Contact", href: "#contact" },
-]
+import "../styles/global-vanilla.css"
 
 const homeProjects = [];
+
+const headerLinks = [
+    { name: "Home", href: "#header" },
+    { name: "Lavori", href: "#gallery" },
+    { name: "Chi siamo", href: "#about" },
+    { name: "Serivizi", href: "#services" },
+    { name: "Contatti", href: "#contact" },
+    { name: "Admin", href: "/admin" },
+];
 
 ---
 
 <Layout>
-    <Header links={headerLinks}/>
-    <Hero />
-    <Works projects={homeProjects}/>
-    <About />
-    <Services />
-    <Footer />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <div class="homepage">
+        <Header logoPath="common/logo-nobg.png" links={headerLinks} />
+        <Hero />
+        <Gallery {homeProjects} />
+        <About />
+        <Services />
+        <CTA />
+        <Footer />
+        <Scripts />
+    </div>
 </Layout>

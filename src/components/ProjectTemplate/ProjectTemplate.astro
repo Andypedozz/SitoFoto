@@ -1,0 +1,48 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../Home/Header.astro";
+import PhotoCard from "../Home/PhotoCard.astro";
+import "../../global.css";
+
+const { project } = Astro.props;
+
+const headerLinks = [
+    { name: "Home", href: "/" },
+    { name: "Admin", href: "/admin" },
+]
+
+// Fetch related media
+const res = await fetch(new URL("/api/media?slug="+project.slug, Astro.request.url), { method: "GET" });
+let media = await res.json();
+if (media.error) media = [];
+const photos = media.filter((media: any) => media.tipo === "immagine");
+---
+
+<style>
+    .content {
+        color: white;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    .photos-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 35px;
+        margin: 25px;
+    }
+</style>
+<Layout>
+    <Header logoPath="../common/logo-nobg.png" links={headerLinks}/>
+    <div class="project-header">
+        <h1>{project.nome}</h1>
+    </div>
+    <div class="gallery">
+        <p>{project.descrizione}</p>
+        <div class="photos-container">
+            {photos.map((photo: any) => <PhotoCard photo={photo} />)}
+        </div>
+    </div>
+</Layout>

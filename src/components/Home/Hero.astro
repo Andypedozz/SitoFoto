@@ -1,0 +1,74 @@
+---
+// Hero.astro
+---
+
+<style>
+    .hero {
+        height: 100vh;
+        position: relative; /* Necessario per posizionare immagine e gradiente */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 0 20px;
+        color: white; /* Assicura testo chiaro sopra lo sfondo scuro */
+    }
+
+    /* Immagine posizionata come background */
+    .hero-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Come background-size: cover */
+        z-index: -2; /* Sotto il gradiente */
+    }
+
+    /* Gradiente di sovrapposizione (come linear-gradient su background) */
+    .hero::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+        z-index: -1; /* Sopra l'immagine, sotto il contenuto */
+    }
+
+    /* Assicura che il contenuto sia sopra lo sfondo */
+    .hero h1,
+    .hero p,
+    .hero .btn {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        line-height: 1.2;
+    }
+
+    .hero p {
+        font-size: 1.5rem;
+        max-width: 800px;
+        margin-bottom: 40px;
+        color: #cccccc;
+    }
+</style>
+
+<section class="hero" id="home">
+    <!-- Immagine reale al posto del background -->
+    <img class="hero-image" src="/common/hero.avif" alt="Hero background" loading="eager" />
+
+    <h1>La fotografia è l'arte di catturare momenti</h1>
+    <p>
+        Trasforma la tua creatività in vita attraverso immagini che raccontano
+        storie uniche e memorabili
+    </p>
+    <a href="#contact" class="btn">Inizia un progetto</a>
+</section>

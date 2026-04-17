@@ -1,0 +1,153 @@
+---
+
+---
+
+<style>
+    .services-section {
+        background: radial-gradient(
+            circle,
+            rgba(0, 0, 0, 1) 0%,
+            rgb(22, 22, 22) 70%,
+            rgba(0, 0, 0, 1) 100%
+        );
+    }
+
+    .services {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 35px;
+    }
+
+    .service-card {
+        background-color: #222222;
+        border-radius: 8px;
+        padding: 40px 30px;
+        text-align: center;
+        transition: all 0.5s ease;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .service-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            45deg,
+            transparent,
+            rgba(148, 119, 82, 0.1),
+            transparent
+        );
+        transform: translateX(-100%);
+        transition: transform 0.7s ease;
+        z-index: -1;
+    }
+
+    .service-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        background-color: #2a2a2a;
+        border-color: rgb(164, 0, 0);
+        box-shadow: 0 15px 30px rgba(148, 119, 82, 0.15);
+    }
+
+    .service-card:hover::before {
+        transform: translateX(100%);
+    }
+
+    .service-card .service-icon,
+    .service-card h3,
+    .service-card p,
+    .service-card .btn {
+        transition: all 0.4s ease 0.1s;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .service-card:hover .service-icon {
+        transform: scale(1.1) translateY(-5px);
+        color: rgb(164, 0, 0);
+    }
+
+    .service-card:hover h3 {
+        transform: translateY(-5px);
+        color: rgb(164, 0, 0);
+    }
+
+    .service-card:hover p {
+        transform: translateY(-3px);
+    }
+
+    .service-card:hover .btn {
+        transform: translateY(-3px);
+        background-color: rgb(164, 0, 0);
+    }
+
+    .service-icon {
+        font-size: 3.2rem;
+        color: #650000
+        margin-bottom: 25px;
+        transition: all 0.5s ease;
+    }
+
+    .service-card h3 {
+        font-size: 1.6rem;
+        margin-bottom: 18px;
+        transition: all 0.5s ease;
+    }
+
+    .service-card p {
+        color: #cccccc;
+        margin-bottom: 28px;
+        transition: all 0.5s ease;
+    }
+</style>
+<section class="section services-section" id="services">
+    <div class="container">
+        <div class="section-title">
+            <h2>Di cosa ci occupiamo</h2>
+        </div>
+
+        <div class="services">
+            <div class="service-card fade-in">
+                <div class="service-icon">
+                    <i class="fas fa-film"></i>
+                </div>
+                <h3>Produzione cinematografica</h3>
+                <p>
+                    Creiamo film e video di alta qualità per ogni tipo di
+                    progetto, dalle campagne pubblicitarie ai documentari.
+                </p>
+                <a href="#services" class="btn">Scopri di più</a>
+            </div>
+
+            <div class="service-card fade-in">
+                <div class="service-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h3>Creazione contenuti visivi</h3>
+                <p>
+                    Realizziamo immagini e video che raccontano storie
+                    coinvolgenti per il web e i social media.
+                </p>
+                <a href="#services" class="btn">Scopri di più</a>
+            </div>
+
+            <div class="service-card fade-in">
+                <div class="service-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h3>Servizi fotografici</h3>
+                <p>
+                    Fotografia professionale per eventi, prodotti e personale
+                    con attenzione ai dettagli e all'estetica.
+                </p>
+                <a href="#services" class="btn">Scopri di più</a>
+            </div>
+        </div>
+    </div>
+</section>

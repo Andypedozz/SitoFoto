@@ -1,0 +1,45 @@
+---
+// import ContactForm from "./ContactForm.astro";
+---
+<style>
+    .cta-section {
+        background-image:
+            linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
+            url("https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80");
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
+        text-align: center;
+    }
+
+    .cta-content {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .cta-content h1 {
+        font-size: 3rem;
+        margin-bottom: 25px;
+    }
+
+    .cta-content p {
+        font-size: 1.2rem;
+        color: #cccccc;
+        margin-bottom: 40px;
+    }
+</style>
+<section class="section cta-section" id="contact">
+    <div class="container">
+        <div class="cta-content fade-in">
+            <h1>Sei pronto a iniziare un nuovo progetto con noi?</h1>
+            <p>
+                Trasforma la tua visione in realtà con contenuti visivi di
+                impatto che catturano l'attenzione e raccontano la tua storia in
+                modo unico. Lavoriamo insieme per creare qualcosa di
+                straordinario.
+            </p>
+            <a href="#footer" class="btn">Contattaci ora</a>
+            <!-- <ContactForm /> -->
+        </div>
+    </div>
+</section>
