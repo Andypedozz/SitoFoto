@@ -1,0 +1,14 @@
+---
+import type { Project } from "../types/Project";
+import Gallery from "./Gallery.astro";
+
+interface Props {
+    projects: Project[];
+}
+
+const { projects } = Astro.props
+---
+<section>
+    <h2>I nostri lavori recenti</h2>
+    <Gallery projects={projects}/>
+</section>
