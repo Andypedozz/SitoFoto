@@ -20,9 +20,20 @@ cloudinary.config({
 
 export async function GET({ request }) {
 
-    const result = (await db.execute(
-        "SELECT * FROM Media"
-    )).rows;
+    const url = new URL(request.url);
+    const slug = url.searchParams.get("slug");
+
+    if (slug) {
+        const project = (await db.execute("SELECT * FROM Progetto WHERE slug = ?", [slug])).rows[0];
+        const result = (await db.execute("SELECT * FROM Media WHERE idProgetto = ?", [project.id])).rows;
+        return new Response(JSON.stringify(result), {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+    }
+
+    const result = (await db.execute("SELECT * FROM Media")).rows;
     
     return new Response(JSON.stringify(result), {
         headers: {
