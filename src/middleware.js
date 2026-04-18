@@ -9,7 +9,7 @@ export const onRequest = defineMiddleware((context, next) => {
     const token = cookies.get("token")?.value;
 
     const isProtected = protectedRoutes.some(route =>
-        url.pathname.startsWith(route)
+        url.pathname.includes(route)
     );
 
     if (isProtected) {
