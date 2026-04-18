@@ -39,7 +39,7 @@ export async function POST({ request }) {
     try {
         const data = await request.json();
         console.log(data);
-        await db.execute("INSERT INTO Progetto (nome, slug, copertina, homepage) VALUES (?, ?, ?, ?)", [data.nome, data.slug, data.copertina, 1]); 
+        await db.execute("INSERT INTO Progetto (nome, slug, copertina, descrizione, homepage) VALUES (?, ?, ?, ?, ?)", [data.nome, data.slug, data.copertina, data.descrizione, 1]); 
         const newProject = (await db.execute("SELECT * FROM Progetto WHERE slug = ?", [data.slug])).rows[0];
         return jsonResponse({
             success: true,
@@ -54,7 +54,6 @@ export async function POST({ request }) {
 export async function PUT({ request }) {
     try {
         const { id, ...data } = await request.json();
-        console.log(id);
         console.log(data);
 
         if(!id) {
@@ -64,7 +63,7 @@ export async function PUT({ request }) {
             }, 400);
         }
 
-        await db.execute("UPDATE Progetto SET (nome, slug, copertina) = (?, ?, ?) WHERE id = ?", [data.nome, data.slug, data.copertina, id]);
+        await db.execute("UPDATE Progetto SET (nome, slug, copertina, descrizione) = (?, ?, ?, ?) WHERE id = ?", [data.nome, data.slug, data.copertina, data.descrizione, id]);
 
         const updatedProject = (await db.execute("SELECT * FROM Progetto WHERE id = ?", [id])).rows[0];
 

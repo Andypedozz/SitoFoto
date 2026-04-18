@@ -38,7 +38,7 @@ export function useMedia() {
      */
     const uploadMedia = async (formData) => {
         try {
-            const response = await fetch("/api/media/upload", {
+            const response = await fetch("/api/media", {
                 method: "POST",
                 body: formData
             });

@@ -37,6 +37,17 @@ const FORM_FIELDS = (formData, handleInputChange, editingProject) => [
         value: formData.copertina,
         onChange: handleInputChange,
         description: 'Nome del file dell\'immagine di copertina'
+    },
+    {
+        id: "descrizione",
+        name: "descrizione",
+        label: "Descrizione",
+        type: "input",
+        inputType: "text",
+        placeholder: "Inserisci la descrizione del progetto",
+        value: formData.descrizione,
+        onChange: handleInputChange,
+        description: "Descrizione del progetto"
     }
 ];
 

@@ -15,7 +15,7 @@ const headerLinks = [
 const res = await fetch(new URL("/api/media?slug="+project.slug, Astro.request.url), { method: "GET" });
 let media = await res.json();
 if (media.error) media = [];
-const photos = media.filter((media: any) => media.tipo === "immagine");
+const photos = media.filter((media: any) => media.tipo === "image");
 ---
 
 <style>
@@ -40,7 +40,6 @@ const photos = media.filter((media: any) => media.tipo === "immagine");
         <h1>{project.nome}</h1>
     </div>
     <div class="gallery">
-        <p>{project.descrizione}</p>
         <div class="photos-container">
             {photos.map((photo: any) => <PhotoCard photo={photo} />)}
         </div>

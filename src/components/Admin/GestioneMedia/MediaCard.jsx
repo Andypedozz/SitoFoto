@@ -8,10 +8,6 @@ export default function MediaCard({ media, onDelete, progetto }) {
         return tipo === 'video' ? 'text-blue-500' : 'text-green-500';
     };
 
-    const getFileExtension = (filename) => {
-        return filename.split('.').pop()?.toUpperCase() || 'FILE';
-    };
-
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('it-IT');
     };
@@ -24,16 +20,16 @@ export default function MediaCard({ media, onDelete, progetto }) {
         <div className="group relative bg-black border border-red-900/30 rounded-lg overflow-hidden transition-all duration-300 hover:border-red-600/50">
             {/* Preview area */}
             <div className="aspect-video bg-linear-to-br from-red-950/20 to-black flex items-center justify-center relative">
-                {media.percorso ? (
+                {media.secureUrl ? (
                     media.tipo === 'video' ? (
                         <video 
-                            src={media.percorso} 
+                            src={media.secureUrl} 
                             className="w-full h-full object-cover"
                             preload="metadata"
                         />
                     ) : (
                         <img 
-                            src={media.percorso} 
+                            src={media.secureUrl} 
                             alt={media.nome}
                             className="w-full h-full object-cover"
                         />
@@ -64,7 +60,7 @@ export default function MediaCard({ media, onDelete, progetto }) {
             {/* Info overlay on hover */}
             <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
                 <button
-                    onClick={() => window.open(media.percorso, '_blank')}
+                    onClick={() => window.open(media.secureUrl, '_blank')}
                     className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1"
                 >
                     <span>🔍</span>
@@ -104,7 +100,6 @@ export default function MediaCard({ media, onDelete, progetto }) {
                         ID: {media.id}
                     </span>
                     <span className="text-gray-700">•</span>
-                    <span className="text-gray-600">{getFileExtension(media.nome)}</span>
                 </div>
             </div>
         </div>
