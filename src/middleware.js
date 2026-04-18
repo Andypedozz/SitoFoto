@@ -4,27 +4,28 @@ import { verifyToken } from "./auth/auth";
 const protectedRoutes = ["/admin"];
 
 export const onRequest = defineMiddleware((context, next) => {
-    const { url, cookies, redirect } = context;
+    const { url, cookies, locals } = context;
 
-    const token = cookies.get("token");
-    const isProtected = protectedRoutes.some(route => {
-        url.pathname.startsWith(route);
-    })
+    const token = cookies.get("token")?.value;
+
+    const isProtected = protectedRoutes.some(route =>
+        url.pathname.startsWith(route)
+    );
 
     if (isProtected) {
         if (!token) {
-            return redirect("/login");
+            return context.redirect("/login");
         }
 
         const user = verifyToken(token);
 
         if (!user) {
             cookies.delete("token", { path: "/" });
-            return redirect("/login");
+            return context.redirect("/login");
         }
 
-        context.locals.user = user;
+        locals.user = user;
     }
 
     return next();
-})
+});

@@ -1,8 +1,12 @@
 import bcrypt from "bcryptjs"
 import { signToken } from "../../auth/auth";
+import { db } from "../../db/db";
 
 export async function POST({ request, cookies }) {
-    const { username, password } = await request.json();
+    const formData = await request.formData();
+
+    const username = formData.get("username");
+    const password = formData.get("password");
 
     const user = await db.execute("SELECT * FROM Utente WHERE username = ?", [username]).then((result) => result.rows[0]);
     if (!user) {
@@ -13,9 +17,9 @@ export async function POST({ request, cookies }) {
     if (!valid) {
         return new Response(JSON.stringify({ message: "Invalid password" }), { status: 401 });
     }
-
+    
     const token = signToken(user);
-
+    
     cookies.set("token", token, {
         httpOnly: true,
         secure: true,
@@ -24,5 +28,5 @@ export async function POST({ request, cookies }) {
         maxAge: 60 * 60
     })
 
-    return new Response(JSON.stringify({ message: "Login successful" }), { status: 200 });
+    return Response.redirect(new URL("/admin", request.url));
 }

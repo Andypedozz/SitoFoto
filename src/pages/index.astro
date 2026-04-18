@@ -10,8 +10,6 @@ import Services from "../components/Home/Services.astro";
 import Layout from "../layouts/Layout.astro";
 import "../styles/global-vanilla.css"
 
-const homeProjects = [];
-
 const headerLinks = [
     { name: "Home", href: "#header" },
     { name: "Lavori", href: "#gallery" },
@@ -21,6 +19,9 @@ const headerLinks = [
     { name: "Admin", href: "/admin" },
 ];
 
+const res = await fetch(new URL("/api/projects", Astro.request.url), { method: "GET" });
+let homeProjects = await res.json();
+if (homeProjects.error) homeProjects = [];
 ---
 
 <Layout>

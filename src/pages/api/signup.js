@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import { db } from "../../db/db";
+import { db } from "../../db/db.js";
 
 export async function POST({ request }) {
     const { username, password } = await request.json();
