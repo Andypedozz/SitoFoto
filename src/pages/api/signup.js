@@ -2,7 +2,10 @@ import bcrypt from "bcryptjs"
 import { db } from "../../db/db.js";
 
 export async function POST({ request }) {
-    const { username, password } = await request.json();
+    const formData = await request.formData();
+
+    const username = formData.get("username");
+    const password = formData.get("password");
 
     // Check if user already exists
     const users = await db.execute("SELECT * FROM Utente WHERE username = ?", [username]).then((result) => result.rows[0]);
