@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+import { getOptimizedUrl } from "../../scripts/image";
 
 const { project } = Astro.props;
 ---
@@ -55,7 +57,19 @@ const { project } = Astro.props;
     }
 </style>
 <div class="gallery-item fade-in" onclick=`window.location.href = '/${project.slug}'`>
-    <img src={project.copertina} alt="project-card" loading="lazy"/>
+    <img
+        src={getOptimizedUrl(project.copertina, 800)}
+        srcset={`
+            ${getOptimizedUrl(project.copertina, 400)} 400w,
+            ${getOptimizedUrl(project.copertina, 800)} 800w,
+            ${getOptimizedUrl(project.copertina, 1200)} 1200w
+        `}
+        sizes="(max-width: 768px) 100vw, 400px"
+        width="400"
+        height="500"
+        loading="lazy"
+        alt="photo-card"
+    />
     <div class="gallery-overlay">
         <h3>{project.nome}</h3>
     </div>

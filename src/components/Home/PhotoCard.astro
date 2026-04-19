@@ -1,8 +1,9 @@
 ---
-import { Image } from "astro:assets";
+import { getOptimizedUrl } from "../../scripts/image";
 
 const { photo } = Astro.props;
 ---
+
 <style>
     .gallery-item {
         position: relative;
@@ -56,5 +57,17 @@ const { photo } = Astro.props;
     }
 </style>
 <div class="gallery-item">
-    <img src={photo.secureUrl} width={400} height={500} alt="photo-card" loading="lazy">
+    <img
+        src={getOptimizedUrl(photo.secureUrl, 800)}
+        srcset={`
+            ${getOptimizedUrl(photo.secureUrl, 400)} 400w,
+            ${getOptimizedUrl(photo.secureUrl, 800)} 800w,
+            ${getOptimizedUrl(photo.secureUrl, 1200)} 1200w
+        `}
+        sizes="(max-width: 768px) 100vw, 400px"
+        width="400"
+        height="500"
+        loading="lazy"
+        alt="photo-card"
+    />
 </div>
