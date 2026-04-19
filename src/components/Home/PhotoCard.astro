@@ -8,7 +8,6 @@ const { photo } = Astro.props;
         position: relative;
         cursor: pointer;
         overflow: hidden;
-        /* border-radius: 8px; */
         height: 500px; /* Aumentata da 400px a 500px */
         transition: all 0.5s ease;
     }
@@ -18,7 +17,6 @@ const { photo } = Astro.props;
         height: 100%;
         object-fit: cover;
         transition: all 0.5s ease;
-        filter: grayscale(100%) brightness(0.9);
     }
 
     .gallery-item:hover {
@@ -27,7 +25,6 @@ const { photo } = Astro.props;
     }
 
     .gallery-item:hover img {
-        filter: grayscale(0%) brightness(1);
         transform: scale(1.08);
     }
 

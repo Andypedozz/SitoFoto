@@ -16,7 +16,6 @@ const { project } = Astro.props;
         height: 100%;
         object-fit: cover;
         transition: all 0.5s ease;
-        filter: grayscale(100%) brightness(0.9);
     }
 
     .gallery-item:hover {
@@ -25,7 +24,6 @@ const { project } = Astro.props;
     }
 
     .gallery-item:hover img {
-        filter: grayscale(0%) brightness(1);
         transform: scale(1.08);
     }
 
