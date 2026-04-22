@@ -9,7 +9,7 @@ const { photo } = Astro.props;
         position: relative;
         cursor: pointer;
         overflow: hidden;
-        height: 500px; /* Aumentata da 400px a 500px */
+        height: 500px;
         transition: all 0.5s ease;
     }
 
@@ -46,17 +46,42 @@ const { photo } = Astro.props;
         transform: translateY(0);
     }
 
-    .gallery-overlay h3 {
-        font-size: 1.5rem;
-        margin-bottom: 8px;
+    /* ===== MODALE ===== */
+    .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 9999;
     }
 
-    .gallery-overlay p {
-        font-size: 1rem;
-        color: #cccccc;
+    .modal.open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: 2rem;
+        color: white;
+        cursor: pointer;
+    }
+
+    #modal-content img {
+        max-width: 90vw;
+        max-height: 90vh;
+        object-fit: contain;
     }
 </style>
-<div class="gallery-item">
+
+<div class="gallery-item" onclick="openModal(this)">
     <img
         src={getOptimizedUrl(photo.secureUrl, 800)}
         srcset={`
@@ -71,3 +96,44 @@ const { photo } = Astro.props;
         alt="photo-card"
     />
 </div>
+
+<!-- MODALE -->
+<div id="photo-modal" class="modal" onclick="closeModal(event)">
+    <span class="modal-close">&times;</span>
+    <div id="modal-content"></div>
+</div>
+
+<script is:inline>
+    const modal = document.getElementById("photo-modal");
+    const modalContent = document.getElementById("modal-content");
+
+    window.openModal = (el) => {
+        const img = el.querySelector("img");
+
+        // Clona l'immagine già caricata (NO rete)
+        const clone = img.cloneNode(true);
+
+        modalContent.innerHTML = "";
+        modalContent.appendChild(clone);
+
+        modal.classList.add("open");
+    };
+
+    window.closeModal = (e) => {
+        if (
+            e.target.classList.contains("modal") ||
+            e.target.classList.contains("modal-close")
+        ) {
+            modal.classList.remove("open");
+            modalContent.innerHTML = "";
+        }
+    };
+
+    // chiusura con ESC
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            modal.classList.remove("open");
+            modalContent.innerHTML = "";
+        }
+    });
+</script>
