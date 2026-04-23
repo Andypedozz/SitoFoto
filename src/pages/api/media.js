@@ -64,10 +64,59 @@ const deleteFromCloudinary = async (publicId, resourceType) => {
 };
 
 /**************************************/
+/*              GET                   */
+/**************************************/
+export async function GET({ request }) {
+    try {
+        const url = new URL(request.url);
+        const slug = url.searchParams.get("slug");
+
+        if (slug) {
+            const projectResult = await db.execute(
+                "SELECT * FROM Progetto WHERE slug = ?",
+                [slug]
+            );
+
+            const project = projectResult.rows[0];
+
+            if (!project) {
+                return new Response(
+                    JSON.stringify({ error: "Progetto non trovato" }),
+                    { status: 404 }
+                );
+            }
+
+            const mediaResult = await db.execute(
+                "SELECT * FROM Media WHERE idProgetto = ?",
+                [project.id]
+            );
+
+            return new Response(JSON.stringify(mediaResult.rows), {
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        const result = await db.execute("SELECT * FROM Media");
+
+        return new Response(JSON.stringify(result.rows), {
+            headers: { "Content-Type": "application/json" }
+        });
+
+    } catch (error) {
+        logError("GET_MEDIA_ERROR", error);
+
+        return new Response(
+            JSON.stringify({ error: "Errore recupero media" }),
+            { status: 500 }
+        );
+    }
+}
+
+/**************************************/
 /*              POST                  */
 /**************************************/
 export async function POST({ request }) {
-    let uploadedCloudinary = []; // per cleanup in caso di errore
+    let uploadedCloudinary = [];
 
     try {
         const formData = await request.formData();
@@ -75,7 +124,10 @@ export async function POST({ request }) {
         const idProgetto = formData.get("idProgetto");
 
         if (!files || files.length === 0) {
-            return new Response(JSON.stringify({ error: "Nessun file caricato" }), { status: 400 });
+            return new Response(
+                JSON.stringify({ error: "Nessun file caricato" }),
+                { status: 400 }
+            );
         }
 
         const progetto = (await db.execute(
@@ -84,17 +136,18 @@ export async function POST({ request }) {
         )).rows[0];
 
         if (!progetto) {
-            return new Response(JSON.stringify({ error: "Progetto non trovato" }), { status: 404 });
+            return new Response(
+                JSON.stringify({ error: "Progetto non trovato" }),
+                { status: 404 }
+            );
         }
 
-        // 🚀 INIZIO TRANSAZIONE
         await db.execute("BEGIN");
 
         const uploadedMedia = [];
 
         for (const file of files) {
             try {
-                // VALIDAZIONI
                 if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
                     throw new Error("Tipo file non supportato");
                 }
@@ -112,20 +165,17 @@ export async function POST({ request }) {
 
                 const filename = path.parse(file.name).name;
 
-                // ☁️ UPLOAD
                 const uploadResponse = await uploadToCloudinary(
                     buffer,
                     filename,
                     resourceType
                 );
 
-                // salva per eventuale rollback Cloudinary
                 uploadedCloudinary.push({
                     publicId: uploadResponse.public_id,
                     resourceType
                 });
 
-                // 💾 INSERT DB
                 const insertResult = await db.execute(
                     `INSERT INTO Media 
                     (nome, tipo, cloudinaryPublicId, url, secureUrl, idProgetto)
@@ -152,12 +202,10 @@ export async function POST({ request }) {
                     idProgetto
                 });
 
-                // ❌ FALLIMENTO → rollback totale
                 throw fileError;
             }
         }
 
-        // ✅ COMMIT
         await db.execute("COMMIT");
 
         return new Response(JSON.stringify(uploadedMedia), {
@@ -165,14 +213,12 @@ export async function POST({ request }) {
         });
 
     } catch (error) {
-        // ❌ ROLLBACK DB
         try {
             await db.execute("ROLLBACK");
         } catch (rollbackError) {
             logError("DB_ROLLBACK_ERROR", rollbackError);
         }
 
-        // ❌ CLEANUP CLOUDINARY (importantissimo)
         for (const file of uploadedCloudinary) {
             await deleteFromCloudinary(file.publicId, file.resourceType);
         }
@@ -182,9 +228,59 @@ export async function POST({ request }) {
         });
 
         return new Response(
-            JSON.stringify({
-                error: "Upload fallito, rollback eseguito"
-            }),
+            JSON.stringify({ error: "Upload fallito, rollback eseguito" }),
+            { status: 500 }
+        );
+    }
+}
+
+/**************************************/
+/*              DELETE                */
+/**************************************/
+export async function DELETE({ request }) {
+    try {
+        const { id } = await request.json();
+
+        if (!id) {
+            return new Response(
+                JSON.stringify({ error: "ID mancante" }),
+                { status: 400 }
+            );
+        }
+
+        const mediaResult = await db.execute(
+            "SELECT * FROM Media WHERE id = ?",
+            [id]
+        );
+
+        const media = mediaResult.rows[0];
+
+        if (!media) {
+            return new Response(
+                JSON.stringify({ error: "Media non trovato" }),
+                { status: 404 }
+            );
+        }
+
+        const resourceType = media.tipo === "video" ? "video" : "image";
+
+        await deleteFromCloudinary(media.cloudinaryPublicId, resourceType);
+
+        await db.execute(
+            "DELETE FROM Media WHERE id = ?",
+            [id]
+        );
+
+        return new Response(
+            JSON.stringify({ success: true, id }),
+            { headers: { "Content-Type": "application/json" } }
+        );
+
+    } catch (error) {
+        logError("DELETE_ERROR", error);
+
+        return new Response(
+            JSON.stringify({ error: "Errore eliminazione" }),
             { status: 500 }
         );
     }
