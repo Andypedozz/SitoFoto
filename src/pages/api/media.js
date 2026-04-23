@@ -213,7 +213,3 @@ export async function DELETE({ request }) {
         );
     }
 }
-
-/*****************************************/
-/*       Media Cloudinary Endpoints      */
-/*****************************************/
