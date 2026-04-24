@@ -1,49 +1,79 @@
 import { db } from "../../../db/db.js";
-import { jsonResponse, handleError } from "../../../scripts/responseUtils";
 
 // GET homepage projects
-export async function GET({ request }) {
+export async function GET() {
     try {
-        const result = (await db.execute("SELECT * FROM Progetto WHERE homepage = ?", [1])).rows;
-        return jsonResponse(result);
+        const result = (await db.execute(
+            "SELECT * FROM Progetto WHERE homepage = ?",
+            [1]
+        )).rows ?? [];
+
+        return new Response(JSON.stringify(result), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+        });
+
     } catch (error) {
-        return handleError(error);
+        console.error("API Error:", error);
+
+        return new Response(JSON.stringify({
+            error: true,
+            message: error.message || "Errore interno"
+        }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
     }
 }
+
 
 // PUT /api/projects/homepage
 export async function PUT({ request }) {
     try {
         const { projectIds } = await request.json();
-        
+
         if (!projectIds || !Array.isArray(projectIds)) {
-            return jsonResponse({ error: "projectIds must be an array" }, { status: 400 });
+            return new Response(JSON.stringify({
+                error: true,
+                message: "projectIds must be an array"
+            }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
         }
-        
-        // Crea placeholder dinamici per ogni ID
+
         const placeholders = projectIds.map(() => '?').join(',');
-        
-        // Imposta homepage=1 per i progetti selezionati
+
         if (projectIds.length > 0) {
             await db.execute(
                 `UPDATE Progetto SET homepage = 1 WHERE id IN (${placeholders})`,
                 projectIds
             );
-        }
-        
-        // Imposta homepage=0 per tutti gli altri
-        if (projectIds.length > 0) {
+
             await db.execute(
                 `UPDATE Progetto SET homepage = 0 WHERE id NOT IN (${placeholders})`,
                 projectIds
             );
         } else {
-            // Se nessun progetto selezionato, imposta tutti a 0
             await db.execute("UPDATE Progetto SET homepage = 0");
         }
-        
-        return jsonResponse({ success: true });
+
+        return new Response(JSON.stringify({
+            success: true
+        }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+        });
+
     } catch (error) {
-        return handleError(error);
+        console.error("API Error:", error);
+
+        return new Response(JSON.stringify({
+            error: true,
+            message: error.message || "Errore interno"
+        }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
     }
 }

@@ -6,7 +6,7 @@ import { rateLimit } from "./lib/rateLimiter";
 const protectedRoutes = ["/admin"];
 
 export const onRequest = defineMiddleware((context, next) => {
-    const { url, cookies, locals, clientAddress } = context;
+    const { url, cookies, locals, clientAddress, request } = context;
 
     const ip = clientAddress || "unknown";
 
@@ -22,7 +22,28 @@ export const onRequest = defineMiddleware((context, next) => {
     }
 
     const token = cookies.get("token")?.value;
+    const method = request.method;
 
+    // 🔒 Blocca POST, PUT, DELETE se non autenticato (eccetto /api/login)
+    const isWriteMethod = ["POST", "PUT", "DELETE"].includes(method);
+    const isLoginRoute = url.pathname === "/api/login";
+
+    if (isWriteMethod && !isLoginRoute) {
+        if (!token) {
+            return new Response("Unauthorized", { status: 401 });
+        }
+
+        const user = verifyToken(token);
+
+        if (!user) {
+            cookies.delete("token", { path: "/" });
+            return new Response("Unauthorized", { status: 401 });
+        }
+
+        locals.user = user;
+    }
+
+    // 🔐 Protezione route tipo /admin
     const isProtected = protectedRoutes.some(route =>
         url.pathname.startsWith(route)
     );

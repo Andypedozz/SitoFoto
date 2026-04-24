@@ -18,9 +18,8 @@ const headerLinks = [
     { name: "Contatti", href: "#contact" },
 ];
 
-const res = await fetch(new URL("/api/projects/homepage", Astro.request.url), { method: "GET" });
-let homeProjects = await res.json();
-if (homeProjects.error) homeProjects = [];
+const res = await fetch(new URL("/api/projects/homepage", Astro.request.url));
+const homeProjects = await res.json();
 ---
 
 <Layout>
