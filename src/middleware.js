@@ -25,7 +25,7 @@ export const onRequest = defineMiddleware((context, next) => {
     const method = request.method;
 
     // 🔒 Blocca POST, PUT, DELETE se non autenticato (eccetto /api/login)
-    const isWriteMethod = ["POST", "PUT", "DELETE"].includes(method);
+    const isWriteMethod = ["POST", "PATCH", "PUT", "DELETE"].includes(method);
     const isLoginRoute = url.pathname === "/api/login";
 
     if (isWriteMethod && !isLoginRoute) {

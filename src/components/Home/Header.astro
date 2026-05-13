@@ -1,94 +1,89 @@
 ---
-const { logoPath, links } = Astro.props;
+const { links } = Astro.props;
 ---
 <style>
-    header {
-        width: 100%;
-        padding: 20px 5%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: rgba(0, 0, 0, 0.9);
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-
-    header.scrolled {
-        padding: 15px 5%;
-        backdrop-filter: blur(10px);
-        background-color: rgba(0, 0, 0, 0.85);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .logo {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .logo img {
-        width: 170px;
-        height: 75px;
-        object-fit: cover;
-    }
-
-    .logo-text {
-        font-size: 1.5rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        text-wrap: nowrap;
-    }
-
-    .logo-text span {
-        color: rgb(164, 0, 0);
-    }
-
     nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
         display: flex;
         align-items: center;
-        gap: 25px;
+        justify-content: space-between;
+        padding: 0 5vw;
+        height: 72px;
+        background: rgba(10, 10, 10, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        transition: background 0.3s;
     }
 
-    nav a {
-        font-weight: 500;
+    .nav-logo {
+        font-family: var(--font-display);
+        font-size: 1.55rem;
+        letter-spacing: 0.12em;
+        color: var(--white);
+        text-decoration: none;
+    }
+    .nav-logo span {
+        color: var(--red);
+    }
+    .nav-links {
+        display: flex;
+        gap: 2.5rem;
+        list-style: none;
+    }
+    .nav-links a {
+        font-family: var(--font-body);
+        font-size: 0.78rem;
+        font-weight: 400;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: var(--white-dim);
+        transition: color 0.25s;
         position: relative;
-        padding: 5px 0;
     }
-
-    nav a:after {
+    .nav-links a::after {
         content: "";
         position: absolute;
-        bottom: 0;
+        bottom: -4px;
         left: 0;
         width: 0;
-        height: 2px;
-        background-color: rgb(164, 0, 0);
-        transition: all 0.3s ease;
+        height: 1px;
+        background: var(--red);
+        transition: width 0.3s ease;
     }
-
-    nav a:hover:after {
+    .nav-links a:hover {
+        color: var(--white);
+    }
+    .nav-links a:hover::after {
         width: 100%;
     }
-
-    .mobile-toggle {
-        display: none;
-        font-size: 1.5rem;
-        cursor: pointer;
+    .nav-cta {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: var(--white);
+        border: 1px solid var(--red);
+        padding: 0.5rem 1.4rem;
+        transition:
+            background 0.25s,
+            color 0.25s;
+    }
+    .nav-cta:hover {
+        background: var(--red);
     }
 </style>
-<header id="header">
-    <div class="logo">
-        <img src={logoPath} alt="logo-image">
-        <div class="logo-text">UG <span>Action Media</span></div>
-    </div>
-
-    <div class="mobile-toggle" id="mobileToggle">
-        <i class="fas fa-bars"></i>
-    </div>
-
-    <nav id="mainNav">
+<nav>
+    <a class="nav-logo" href="#">UG<span>ACTION</span>&nbsp;MEDIA</a>
+    <ul class="nav-links">
         {links.map((link: any) => (
-            <a href={link.href}>{link.name}</a>
+            <li><a href={link.href}>{link.name}</a></li>
         ))}
-    </nav>
-</header>
+    </ul>
+    <a class="nav-cta" href="#contact">Prenota ora</a>
+</nav>

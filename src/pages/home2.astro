@@ -1,6 +1,14 @@
 ---
-import ProjectCard2 from "../components/Home2/ProjectCard2.astro";
+import ProjectCard from "../components/Home/ProjectCard.astro";
 import Layout from "../layouts/Layout.astro";
+
+const headerLinks = [
+  { name: "Portfolio", href: "#portfolio" },
+  { name: "Chi siamo", href: "#about" },
+  { name: "Lavori", href: "#featured" },
+  { name: "processo", href: "#process" },
+  { name: "Contatti", href: "#contact" },
+]
 
 const res = await fetch(new URL("/api/projects/homepage", Astro.request.url));
 const homeProjects = await res.json();
@@ -1290,7 +1298,7 @@ const homeProjects = await res.json();
     <div class="gallery-track-wrap">
       <div class="gallery-track" id="galleryTrack">
         {homeProjects.map((project: any) => (
-          <ProjectCard2 project={project} />
+          <ProjectCard project={project} />
         ))}
       </div>
     </div>
@@ -1345,7 +1353,7 @@ const homeProjects = await res.json();
       <h2 class="section-title">Lavori in evidenza</h2>
     </div>
     <div class="featured-grid reveal">
-      <div class="featured-item wide">
+      <!-- <div class="featured-item wide">
         <img
           src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1400&q=80"
           alt="Marathon"
@@ -1355,7 +1363,7 @@ const homeProjects = await res.json();
           <div class="featured-caption-cat">Evento — 2024</div>
           <h3>Milano City Marathon — Campagna Ufficiale</h3>
         </div>
-      </div>
+      </div> -->
       <div class="featured-item">
         <img
           src="https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=800&q=80"
@@ -1518,7 +1526,7 @@ const homeProjects = await res.json();
           class="btn-primary"
           href="tel:+390000000000"
           style="background:transparent;border:1px solid rgba(255,255,255,0.3);"
-          >+39 000 000 0000</a
+          >+39 331 854 4999</a
         >
       </div>
     </div>
@@ -1558,20 +1566,16 @@ const homeProjects = await res.json();
       <div class="footer-col">
         <h4>Contatti</h4>
         <ul>
-          <li><a href="#">info@ugactionmedia.it</a></li>
-          <li><a href="#">+39 000 000 0000</a></li>
-          <li><a href="#">Via del Corso, Milano</a></li>
-          <li><a href="#">P.IVA 00000000000</a></li>
+          <li><a href="#">ugactionmedia@gmail.com</a></li>
+          <li><a href="#">+39 331 854 4999</a></li>
+          <li><a href="#">P.IVA 3318544999</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2024 UG Action Media. Tutti i diritti riservati.</p>
+      <p>© 2026 UG Action Media. Tutti i diritti riservati.</p>
       <div class="social-links">
-        <a class="social-link" href="#" aria-label="Instagram">IG</a>
-        <a class="social-link" href="#" aria-label="YouTube">YT</a>
-        <a class="social-link" href="#" aria-label="LinkedIn">LN</a>
-        <a class="social-link" href="#" aria-label="TikTok">TK</a>
+        <a class="social-link" href="https://www.instagram.com/ug_action_media/" aria-label="Instagram">IG</a>
       </div>
     </div>
   </footer>
