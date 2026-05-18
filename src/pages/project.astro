@@ -1,8 +1,21 @@
 ---
 import Layout from "../layouts/Layout.astro";
----
-<Layout>
 
+const { projectSlug } = Astro.params;
+
+let project = null;
+
+if (projectSlug) {
+  const res = await fetch(
+    new URL("/api/projects?slug=" + projectSlug, Astro.request.url)
+  );
+
+  project = await res.json();
+}
+
+---
+<!-- {project && <project-template project={project} />} -->
+<Layout>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -977,6 +990,7 @@ import Layout from "../layouts/Layout.astro";
     <div class="project-hero-content">
       <div class="project-eyebrow">Evento &mdash; 2024</div>
       <h1 class="project-hero-title">Milano City<br><em>Marathon</em></h1>
+      <!-- <h1 class="project-hero-title">{project.nome}</h1> -->
       <div class="project-meta-row">
         <div class="project-meta-item">
           <span class="project-meta-label">Cliente</span>
@@ -1027,44 +1041,6 @@ import Layout from "../layouts/Layout.astro";
     </div>
   </section>
 
-  <!-- ── STATS BAR ── -->
-  <!-- <div class="stats-bar">
-    <div class="stat-item">
-      <span class="stat-number">847<em>+</em></span>
-      <span class="stat-label">Scatti consegnati</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-number">18<em>k</em></span>
-      <span class="stat-label">Atleti in gara</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-number">62</span>
-      <span class="stat-label">Nazioni presenti</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-number">7</span>
-      <span class="stat-label">Professionisti sul campo</span>
-    </div>
-  </div> -->
-
-  <!-- ── FEATURED SHOT ── -->
-  <!-- <section class="featured-shot">
-    <div class="featured-shot-header reveal">
-      <div class="section-label">Scatto di punta</div>
-      <h2 class="section-title">Il momento<br>del traguardo</h2>
-    </div>
-    <div class="featured-shot-wrap reveal">
-      <img
-        src="https://images.unsplash.com/photo-1518744386442-2d48ac47a7eb?w=1800&q=80"
-        alt="Maratoneta che taglia il traguardo"
-        loading="lazy"
-      />
-      <div class="shot-count-badge">
-        <span>Gallery completa · 847 scatti</span>
-      </div>
-    </div>
-  </section> -->
-
   <!-- ── MASONRY GALLERY ── -->
   <section class="gallery-section">
     <div class="gallery-header">
@@ -1072,13 +1048,13 @@ import Layout from "../layouts/Layout.astro";
         <div class="section-label">Gallery del progetto</div>
         <h2 class="section-title">Tutti gli scatti</h2>
       </div>
-      <div class="filter-tabs reveal reveal-delay-1">
+      <!-- <div class="filter-tabs reveal reveal-delay-1">
         <button class="filter-tab active" data-filter="all">Tutti</button>
         <button class="filter-tab" data-filter="action">Action</button>
         <button class="filter-tab" data-filter="portraits">Ritratti</button>
         <button class="filter-tab" data-filter="aerial">Drone</button>
         <button class="filter-tab" data-filter="detail">Dettagli</button>
-      </div>
+      </div> -->
     </div>
 
     <div class="masonry-grid" id="masonryGrid">
