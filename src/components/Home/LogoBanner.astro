@@ -1,0 +1,78 @@
+---
+const { logos } = Astro.props;
+---
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .logo-banner-container {
+        background: #0f0f0f;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+    }
+
+    .logo-banner {
+        width: 100%;
+        overflow: hidden;
+        background: #1a1a1a;
+        padding: 35px 0;
+        border-top: 1px solid #2b2b2b;
+        border-bottom: 1px solid #2b2b2b;
+        box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .logo-track {
+        display: flex;
+        width: max-content;
+        animation: scroll 28s linear infinite;
+    }
+
+    .logo-track img {
+        height: 80px;
+        width: auto;
+        margin: 0 60px;
+        object-fit: contain;
+        transition: all 0.3s ease;
+        filter: grayscale(100%) brightness(0.9);
+        opacity: 0.75;
+    }
+
+    .logo-track img:hover {
+        transform: scale(1.15);
+        filter: grayscale(0%) brightness(1.1);
+        opacity: 1;
+    }
+
+    @keyframes scroll {
+        from {
+            transform: translateX(0);
+        }
+
+        to {
+            transform: translateX(-50%);
+        }
+    }
+</style>
+
+<div class="logo-banner-container">
+
+    <div class="logo-banner">
+        <div class="logo-track">
+            <!-- Logos -->
+            {logos.map((logo: any) => (
+                <img src={logo.src} alt={logo.alt} />
+            ))}
+    
+            <!-- Duplicati per loop infinito -->
+            {logos.map((logo: any) => (
+                <img src={logo.src} alt={logo.alt} />
+            ))}
+        </div>
+    </div>
+</div>

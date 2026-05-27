@@ -9,6 +9,7 @@ import Footer from "../components/Home/Footer.astro";
 import Process from "../components/Home/Process.astro";
 import CTA from "../components/Home/CTA.astro";
 import Featured from "../components/Home/Featured.astro";
+import LogoBanner from "../components/Home/LogoBanner.astro";
 import "../styles/style.css"
 
 const headerLinks = [
@@ -21,6 +22,8 @@ const headerLinks = [
 
 const res = await fetch(new URL("/api/projects/homepage", Astro.request.url));
 const homeProjects = await res.json();
+
+const bannerLogos = [];
 ---
 
 <Layout>
@@ -28,6 +31,7 @@ const homeProjects = await res.json();
   <Hero />
   <Stats />
   <Portfolio projects={homeProjects} />
+  {bannerLogos.length > 0 && <LogoBanner logos={bannerLogos} />}
   <About />
   <Featured />
   <Process />
