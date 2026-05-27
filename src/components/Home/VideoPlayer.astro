@@ -1,0 +1,107 @@
+---
+interface Props {
+  src: string;
+  type?: "local" | "youtube" | "external";
+  autoplay?: boolean;
+  controls?: boolean;
+  width?: string | number;
+  height?: string | number;
+  muted?: boolean;
+  loop?: boolean;
+  class?: string;
+}
+
+const {
+  src,
+  type = "local",
+  autoplay = false,
+  controls = true,
+  width = "100%",
+  height = "auto",
+  muted = false,
+  loop = false,
+  class: className = "",
+} = Astro.props;
+
+function getYoutubeEmbedUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+
+    // youtube.com/watch?v=
+    if (parsed.hostname.includes("youtube.com")) {
+      const videoId = parsed.searchParams.get("v");
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}?autoplay=${
+          autoplay ? 1 : 0
+        }&controls=${controls ? 1 : 0}&mute=${muted ? 1 : 0}&loop=${
+          loop ? 1 : 0
+        }`;
+      }
+    }
+
+    // youtu.be/
+    if (parsed.hostname.includes("youtu.be")) {
+      const videoId = parsed.pathname.replace("/", "");
+
+      return `https://www.youtube.com/embed/${videoId}?autoplay=${
+        autoplay ? 1 : 0
+      }&controls=${controls ? 1 : 0}&mute=${muted ? 1 : 0}&loop=${
+        loop ? 1 : 0
+      }`;
+    }
+  } catch (err) {
+    console.error("URL YouTube non valida", err);
+  }
+
+  return "";
+}
+
+const isYoutube = type === "youtube";
+const iframeSrc = isYoutube ? getYoutubeEmbedUrl(src) : src;
+---
+
+<div
+  class={`video-player ${className}`}
+  style={`width:${width}; height:${height};`}
+>
+  {
+    isYoutube || type === "external" ? (
+      <iframe
+        src={iframeSrc}
+        width="100%"
+        height="100%"
+        frameborder="0"
+        allow={`accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture`}
+        allowfullscreen
+      />
+    ) : (
+      <video
+        src={src}
+        autoplay={autoplay}
+        controls={controls}
+        muted={muted}
+        loop={loop}
+        playsinline
+        width="100%"
+        height="100%"
+      >
+        Il tuo browser non supporta il tag video.
+      </video>
+    )
+  }
+</div>
+
+<style>
+  .video-player {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .video-player iframe,
+  .video-player video {
+    display: block;
+    border: none;
+    width: 100%;
+    height: 100%;
+  }
+</style>
