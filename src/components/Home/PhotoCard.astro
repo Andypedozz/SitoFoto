@@ -1,0 +1,22 @@
+---
+const { photo } = Astro.props
+---
+<div
+    class="masonry-item"
+    data-cat="action"
+    data-index="0"
+    data-src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1400&q=80"
+    data-title="Pacco di testa a km 5"
+    data-cat-label="Action"
+>
+    <img
+        src={photo.secureUrl}
+        alt=""
+        loading="lazy"
+    />
+    <div class="masonry-item-num">01</div>
+    <div class="masonry-item-overlay">
+        <div class="masonry-item-cat">Action</div>
+        <div class="masonry-item-title">Pacco di testa a km 5</div>
+    </div>
+</div>

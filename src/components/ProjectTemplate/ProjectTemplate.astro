@@ -1,8 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import Header from "../Home/Header.astro";
 import PhotoCard from "../Home/PhotoCard.astro";
-import "../../styles/global-vanilla.css"
 
 const { project } = Astro.props;
 
@@ -15,32 +13,1430 @@ const res = await fetch(new URL("/api/media?slug="+project.slug, Astro.request.u
 let media = await res.json();
 if (media.error) media = [];
 const photos = media.filter((media: any) => media.tipo === "image");
+
 ---
-
-<style>
-    .content {
-        color: white;
-    }
-
-    h1 {
-        text-align: center;
-    }
-
-    .photos-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 35px;
-        margin: 25px;
-    }
-</style>
 <Layout>
-    <Header logoPath="../common/logo-nobg.png" links={headerLinks}/>
-    <div class="project-header">
-        <h1>{project.nome}</h1>
-    </div>
-    <div class="gallery">
-        <div class="photos-container">
-            {photos.map((photo: any) => <PhotoCard photo={photo} />)}
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --black-2: #111111;
+      --black-3: #161616;
+      --red: #e02020;
+      --red-dark: #a01515;
+      --red-glow: rgba(224,32,32,0.18);
+      --white: #f5f5f5;
+      --white-dim: rgba(245,245,245,0.55);
+      --white-faint: rgba(245,245,245,0.08);
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'Barlow', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: none; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 1; }
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.85s cubic-bezier(0.16,1,0.3,1), transform 0.85s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.12s; }
+    .reveal-delay-2 { transition-delay: 0.24s; }
+    .reveal-delay-3 { transition-delay: 0.36s; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5vw;
+      height: 72px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.3s;
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      letter-spacing: 0.12em;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--red); }
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white-dim);
+      transition: color 0.25s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 1px;
+      background: var(--red);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-cta {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white);
+      border: 1px solid var(--red);
+      padding: 0.5rem 1.4rem;
+      transition: background 0.25s, color 0.25s;
+    }
+    .nav-cta:hover { background: var(--red); }
+
+    /* ── PROJECT HERO ── */
+    .project-hero {
+      position: relative;
+      height: 72vh;
+      min-height: 520px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .project-hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1800&q=80');
+      background-size: cover;
+      background-position: center 35%;
+      transform: scale(1.05);
+      animation: heroZoom 14s ease-out forwards;
+    }
+    @keyframes heroZoom {
+      from { transform: scale(1.05); }
+      to   { transform: scale(1.0); }
+    }
+    .project-hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(10,10,10,1) 0%,
+        rgba(10,10,10,0.6) 40%,
+        rgba(10,10,10,0.2) 100%
+      );
+    }
+    /* red accent line across the hero */
+    .project-hero-line {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: 0;
+      height: 2px;
+      background: linear-gradient(to right, var(--red) 0%, transparent 60%);
+      z-index: 3;
+    }
+    /* back breadcrumb */
+    .project-breadcrumb {
+      position: absolute;
+      top: 92px; left: 5vw;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      text-decoration: none;
+      opacity: 0;
+      animation: fadeIn 0.7s 0.3s ease forwards;
+    }
+    .project-breadcrumb svg {
+      width: 14px; height: 14px;
+      stroke: var(--red);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.25s;
+    }
+    .project-breadcrumb:hover svg { transform: translateX(-4px); }
+    .project-breadcrumb span {
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--white-dim);
+      transition: color 0.25s;
+    }
+    .project-breadcrumb:hover span { color: var(--white); }
+
+    .project-hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 0 5vw 6vh;
+      width: 100%;
+    }
+    .project-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.5s ease forwards;
+    }
+    .project-eyebrow::before {
+      content: '';
+      display: block;
+      width: 32px; height: 1px;
+      background: var(--red);
+    }
+    .project-hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(3.2rem, 7.5vw, 6.5rem);
+      line-height: 0.93;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      margin-bottom: 1.8rem;
+      opacity: 0;
+      animation: fadeUp 1s 0.7s ease forwards;
+    }
+    .project-hero-title em { color: var(--red); font-style: normal; }
+    /* meta row */
+    .project-meta-row {
+      display: flex;
+      gap: 3rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 1s 0.9s ease forwards;
+    }
+    .project-meta-item { display: flex; flex-direction: column; gap: 0.3rem; }
+    .project-meta-label {
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+    }
+    .project-meta-value {
+      font-size: 0.88rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--white);
+    }
+
+    /* ── PROJECT INFO ── */
+    .project-info {
+      padding: 5.5rem 5vw;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 5rem;
+      align-items: start;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .project-description {
+      font-size: 1.08rem;
+      line-height: 1.8;
+      color: var(--white-dim);
+    }
+    .project-description p + p { margin-top: 1.4rem; }
+    .project-description strong { color: var(--white); font-weight: 500; }
+    .project-sidebar {}
+    .sidebar-block {
+      padding: 1.6rem 0;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .sidebar-block:first-child { border-top: none; padding-top: 0; }
+    .sidebar-block-label {
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 0.7rem;
+    }
+    .sidebar-block-value {
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--white-dim);
+    }
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.2rem;
+    }
+    .tag {
+      font-size: 0.68rem;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--white-dim);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 0.3rem 0.85rem;
+      transition: border-color 0.25s, color 0.25s;
+    }
+    .tag:hover { border-color: var(--red); color: var(--white); }
+
+    /* ── SECTION SHARED ── */
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 1.2rem;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 28px; height: 1px;
+      background: var(--red);
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      line-height: 1;
+      letter-spacing: 0.03em;
+      color: var(--white);
+      margin-bottom: 1.4rem;
+    }
+
+    /* ── FEATURED SHOT ── */
+    .featured-shot {
+      padding: 0 5vw 5rem;
+    }
+    .featured-shot-header {
+      margin-bottom: 2.5rem;
+    }
+    .featured-shot-wrap {
+      position: relative;
+      aspect-ratio: 21/9;
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+    .featured-shot-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.9);
+      transition: transform 0.9s cubic-bezier(0.25,0.46,0.45,0.94),
+                  filter 0.6s ease;
+    }
+    .featured-shot-wrap:hover img {
+      transform: scale(1.04);
+      filter: brightness(1);
+    }
+    /* corner accent */
+    .featured-shot-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: 1.8rem; right: 1.8rem;
+      width: 50px; height: 50px;
+      border-right: 2px solid var(--red);
+      border-bottom: 2px solid var(--red);
+      pointer-events: none;
+      opacity: 0.6;
+    }
+    /* image count badge */
+    .shot-count-badge {
+      position: absolute;
+      bottom: 1.8rem; left: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.68rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--white-dim);
+      z-index: 2;
+    }
+    .shot-count-badge::before {
+      content: '';
+      display: block;
+      width: 6px; height: 6px;
+      background: var(--red);
+    }
+
+    /* ── MASONRY GALLERY ── */
+    .gallery-section {
+      padding: 5rem 5vw;
+      background: var(--black-2);
+    }
+    .gallery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    /* filter tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 0.2rem;
+    }
+    .filter-tab {
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--white-dim);
+      padding: 0.5rem 1.2rem;
+      border: 1px solid transparent;
+      background: none;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .filter-tab:hover { color: var(--white); border-color: rgba(255,255,255,0.12); }
+    .filter-tab.active { border-color: var(--red); color: var(--red); }
+
+    /* masonry columns layout */
+    .masonry-grid {
+      columns: 3;
+      column-gap: 3px;
+    }
+    @media (max-width: 900px) { .masonry-grid { columns: 2; } }
+    @media (max-width: 560px) { .masonry-grid { columns: 1; } }
+
+    .masonry-item {
+      break-inside: avoid;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 3px;
+      cursor: zoom-in;
+    }
+    .masonry-item img {
+      width: 500px;
+      object-fit: cover;
+      height: auto;
+      display: block;
+      filter: grayscale(20%) brightness(0.88);
+      transition: transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94),
+                  filter 0.5s ease;
+    }
+    .masonry-item:hover img {
+      transform: scale(1.06);
+      filter: grayscale(0%) brightness(1);
+    }
+    .masonry-item-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, transparent 50%, rgba(10,10,10,0.88) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1.4rem;
+    }
+    .masonry-item:hover .masonry-item-overlay { opacity: 1; }
+    .masonry-item-cat {
+      font-size: 0.62rem;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 0.3rem;
+    }
+    .masonry-item-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      letter-spacing: 0.04em;
+      color: var(--white);
+    }
+    /* ghost number */
+    .masonry-item-num {
+      position: absolute;
+      top: 0.8rem; right: 1rem;
+      font-family: var(--font-display);
+      font-size: 3rem;
+      color: rgba(255,255,255,0.05);
+      line-height: 1;
+      pointer-events: none;
+      transition: color 0.3s;
+    }
+    .masonry-item:hover .masonry-item-num { color: rgba(224,32,32,0.1); }
+
+    /* ── LIGHTBOX ── */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(10,10,10,0.97);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .lightbox.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .lightbox-inner {
+      position: relative;
+      max-width: 90vw;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .lightbox-img-wrap {
+      position: relative;
+      max-width: 90vw;
+      max-height: 78vh;
+      overflow: hidden;
+    }
+    .lightbox-img-wrap img {
+      display: block;
+      max-width: 90vw;
+      max-height: 78vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    /* red corner accent */
+    .lightbox-img-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 40px; height: 40px;
+      border-left: 2px solid var(--red);
+      border-top: 2px solid var(--red);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .lightbox-img-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 40px; height: 40px;
+      border-right: 2px solid var(--red);
+      border-bottom: 2px solid var(--red);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .lightbox-caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: 2rem;
+    }
+    .lightbox-caption-text {}
+    .lightbox-caption-cat {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 0.2rem;
+    }
+    .lightbox-caption-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      letter-spacing: 0.04em;
+      color: var(--white);
+    }
+    .lightbox-counter {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.18);
+      flex-shrink: 0;
+    }
+    .lightbox-counter span { color: var(--red); }
+    /* close button */
+    .lightbox-close {
+      position: fixed;
+      top: 1.4rem; right: 1.6rem;
+      z-index: 10;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--white-dim);
+      width: 44px; height: 44px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.25s, color 0.25s;
+    }
+    .lightbox-close:hover { border-color: var(--red); color: var(--red); }
+    .lightbox-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+    /* nav arrows */
+    .lightbox-prev,
+    .lightbox-next {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--white-dim);
+      width: 52px; height: 52px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.25s, color 0.25s, transform 0.25s;
+    }
+    .lightbox-prev { left: 1.5rem; }
+    .lightbox-next { right: 1.5rem; }
+    .lightbox-prev:hover,
+    .lightbox-next:hover { border-color: var(--red); color: var(--red); }
+    .lightbox-prev:hover { transform: translateY(-50%) translateX(-3px); }
+    .lightbox-next:hover { transform: translateY(-50%) translateX(3px); }
+    .lightbox-prev svg,
+    .lightbox-next svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--black);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stat-item {
+      padding: 2.2rem 2rem;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-item.visible { opacity: 1; transform: none; }
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      letter-spacing: 0.04em;
+      color: var(--white);
+      display: block;
+    }
+    .stat-number em { color: var(--red); font-style: normal; }
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--white-dim);
+      display: block;
+      margin-top: 0.3rem;
+    }
+
+    /* ── VIDEO REEL ── */
+    .video-section {
+      padding: 5.5rem 5vw;
+      background: var(--black);
+    }
+    .video-header { margin-bottom: 2.5rem; }
+    .video-wrap {
+      position: relative;
+      aspect-ratio: 16/9;
+      background: var(--black-2);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .video-thumb {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.55);
+      transition: filter 0.4s ease;
+    }
+    .video-wrap:hover .video-thumb { filter: brightness(0.45); }
+    .video-play-btn {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+    }
+    .play-circle {
+      width: 88px; height: 88px;
+      border: 2px solid rgba(255,255,255,0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .play-circle svg {
+      width: 28px; height: 28px;
+      fill: var(--white);
+      margin-left: 4px;
+    }
+    .video-wrap:hover .play-circle {
+      border-color: var(--red);
+      transform: scale(1.1);
+    }
+    .video-play-label {
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--white-dim);
+    }
+    .video-overlay-lines {
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 3px,
+          rgba(255,255,255,0.012) 3px,
+          rgba(255,255,255,0.012) 4px
+        );
+      pointer-events: none;
+    }
+    /* video info strip below */
+    .video-strip {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      padding: 1.4rem 0 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      margin-top: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .video-strip-item { display: flex; align-items: center; gap: 0.6rem; }
+    .video-strip-dot { width: 4px; height: 4px; background: var(--red); flex-shrink: 0; }
+    .video-strip-text {
+      font-size: 0.78rem;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      color: var(--white-dim);
+    }
+
+    /* ── RELATED PROJECTS ── */
+    .related-section {
+      padding: 5.5rem 5vw;
+      background: var(--black-2);
+    }
+    .related-header { margin-bottom: 3rem; }
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+    }
+    @media (max-width: 900px) { .related-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .related-grid { grid-template-columns: 1fr; } }
+    .related-card {
+      position: relative;
+      aspect-ratio: 4/5;
+      overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .related-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: grayscale(25%) brightness(0.8);
+      transition: transform 0.75s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.5s ease;
+    }
+    .related-card:hover img {
+      transform: scale(1.07);
+      filter: grayscale(0%) brightness(1);
+    }
+    .related-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, transparent 40%, rgba(10,10,10,0.92) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1.6rem;
+      transition: background 0.4s;
+    }
+    .related-card:hover .related-card-overlay {
+      background: linear-gradient(160deg, transparent 20%, rgba(10,10,10,0.95) 100%);
+    }
+    .related-card-cat {
+      font-size: 0.62rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 0.35rem;
+      transform: translateY(6px);
+      opacity: 0.8;
+      transition: transform 0.35s ease, opacity 0.35s ease;
+    }
+    .related-card:hover .related-card-cat { transform: none; opacity: 1; }
+    .related-card-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      letter-spacing: 0.04em;
+      line-height: 1.05;
+      color: var(--white);
+      transform: translateY(6px);
+      transition: transform 0.35s 0.04s ease;
+    }
+    .related-card:hover .related-card-title { transform: none; }
+
+    /* ── CTA ── */
+    .cta-section {
+      position: relative;
+      text-align: center;
+      padding: 7rem 5vw;
+      overflow: hidden;
+    }
+    .cta-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(224,32,32,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-divider {
+      width: 48px; height: 2px;
+      background: var(--red);
+      margin: 1.6rem auto;
+    }
+    .section-body {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--white-dim);
+      max-width: 480px;
+      margin: 0 auto 2.4rem;
+    }
+    .btn-primary {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white);
+      background: var(--red);
+      padding: 0.85rem 2.2rem;
+      transition: background 0.25s, transform 0.2s;
+    }
+    .btn-primary:hover { background: var(--red-dark); transform: translateY(-2px); }
+    .btn-ghost {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--white-dim);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.85rem 2.2rem;
+      transition: color 0.25s, border-color 0.25s;
+    }
+    .btn-ghost:hover { color: var(--white); border-color: rgba(255,255,255,0.5); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--black-2);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      gap: 3rem;
+      padding: 4rem 5vw;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    @media (max-width: 900px) { .footer-inner { grid-template-columns: 1fr 1fr; } }
+    .footer-brand p {
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--white-dim);
+      margin-top: 1rem;
+      max-width: 280px;
+    }
+    .footer-col h4 {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+      color: var(--white);
+      margin-bottom: 1.2rem;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col li + li { margin-top: 0.7rem; }
+    .footer-col a {
+      font-size: 0.82rem;
+      color: var(--white-dim);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.25s;
+    }
+    .footer-col a:hover { color: var(--red); }
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.6rem 5vw;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .footer-bottom p {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: rgba(245,245,245,0.28);
+    }
+    .social-links { display: flex; gap: 0.6rem; }
+    .social-link {
+      width: 36px; height: 36px;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--white-dim);
+      text-decoration: none;
+      transition: border-color 0.25s, color 0.25s;
+    }
+    .social-link:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .project-info { grid-template-columns: 1fr; gap: 2.5rem; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .stat-item:nth-child(2) { border-right: none; }
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .project-meta-row { gap: 1.6rem; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- ── NAV ── -->
+  <nav>
+    <a class="nav-logo" href="/">UG<span>ACTION</span>&nbsp;MEDIA</a>
+    <ul class="nav-links">
+      <li><a href="/#portfolio">Portfolio</a></li>
+      <li><a href="/#about">Studio</a></li>
+      <li><a href="/#process">Processo</a></li>
+      <li><a href="/#contact">Contatti</a></li>
+    </ul>
+    <a class="nav-cta" href="/#contact">Lavoriamo insieme</a>
+  </nav>
+
+  <!-- ── PROJECT HERO ── -->
+  <section class="project-hero">
+    <div class="project-hero-bg"></div>
+    <div class="project-hero-overlay"></div>
+    <div class="project-hero-line"></div>
+
+    <a class="project-breadcrumb" href="/#portfolio">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Portfolio</span>
+    </a>
+
+    <div class="project-hero-content">
+      <div class="project-eyebrow">Evento &mdash; 2024</div>
+      <h1 class="project-hero-title">Milano City<br><em>Marathon</em></h1>
+      <!-- <h1 class="project-hero-title">{project.nome}</h1> -->
+      <div class="project-meta-row">
+        <div class="project-meta-item">
+          <span class="project-meta-label">Cliente</span>
+          <span class="project-meta-value">Milano Marathon Org.</span>
         </div>
+        <div class="project-meta-item">
+          <span class="project-meta-label">Data</span>
+          <span class="project-meta-value">14 Aprile 2024</span>
+        </div>
+        <div class="project-meta-item">
+          <span class="project-meta-label">Categoria</span>
+          <span class="project-meta-value">Sport Action / Event Coverage</span>
+        </div>
+      </div>
     </div>
+  </section>
+
+  <!-- ── PROJECT INFO ── -->
+  <section class="project-info">
+    <div class="project-description reveal">
+      <p>La <strong>Milano City Marathon 2024</strong> ha radunato oltre 18.000 atleti da 62 paesi lungo un percorso di 42,195 km che attraversa il cuore della città. Il brief era chiaro: catturare non solo la fatica e la vittoria, ma l'anima collettiva di un evento che trasforma Milano in un palcoscenico di emozioni.</p>
+      <p>Abbiamo dispiegato un team di cinque fotografi e due operatori video in punti strategici del percorso, dalla partenza in Piazza Duomo fino alle rampe finali del parco Sempione. Ogni immagine racconta una storia: il crampo a 38 km, l'abbraccio sul traguardo, lo sguardo perso nell'orizzonte durante quei chilometri solitari tra il 28 e il 32.</p>
+      <p>La post-produzione ha curato un editing coerente con l'identità cromatica dell'evento — caldi dorati, contrasti vibranti — bilanciando la grinta del reportage con la cura estetica richiesta dalla campagna ufficiale.</p>
+    </div>
+    <div class="project-sidebar">
+      <div class="sidebar-block reveal reveal-delay-1">
+        <div class="sidebar-block-label">Servizi erogati</div>
+        <div class="tag-list">
+          <span class="tag">Sport Action</span>
+          <span class="tag">Event Coverage</span>
+          <span class="tag">Video Production</span>
+          <span class="tag">Drone Aerial</span>
+          <span class="tag">Post-produzione</span>
+        </div>
+      </div>
+      <div class="sidebar-block reveal reveal-delay-1">
+        <div class="sidebar-block-label">Equipment</div>
+        <div class="sidebar-block-value">Canon R3 · Canon R5 Mark II<br>70–200mm f/2.8 · 24–70mm f/2.8<br>400mm f/2.8 · DJI Mavic 3 Pro</div>
+      </div>
+      <div class="sidebar-block reveal reveal-delay-2">
+        <div class="sidebar-block-label">Team</div>
+        <div class="sidebar-block-value">5 fotografi · 2 operatori<br>1 pilota drone certificato<br>2 editor in post-produzione</div>
+      </div>
+      <div class="sidebar-block reveal reveal-delay-2">
+        <div class="sidebar-block-label">Consegna</div>
+        <div class="sidebar-block-value">847 foto hi-res<br>12 min highlight reel<br>30 sec social cut</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MASONRY GALLERY ── -->
+  <section class="gallery-section">
+    <div class="gallery-header">
+      <div class="reveal">
+        <div class="section-label">Gallery del progetto</div>
+        <h2 class="section-title">Tutti gli scatti</h2>
+      </div>
+      <!-- <div class="filter-tabs reveal reveal-delay-1">
+        <button class="filter-tab active" data-filter="all">Tutti</button>
+        <button class="filter-tab" data-filter="action">Action</button>
+        <button class="filter-tab" data-filter="portraits">Ritratti</button>
+        <button class="filter-tab" data-filter="aerial">Drone</button>
+        <button class="filter-tab" data-filter="detail">Dettagli</button>
+      </div> -->
+    </div>
+
+    <div class="masonry-grid" id="masonryGrid">
+      <!-- {photos.map((photo: any) => (
+        <PhotoCard photo={photo} />
+      ))} -->
+
+      <!-- ACTION -->
+      <div class="masonry-item" data-cat="action" data-index="0"
+           data-src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1400&q=80"
+           data-title="Pacco di testa a km 5" data-cat-label="Action">
+        <img src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Action</div>
+          <div class="masonry-item-title">Pacco di testa a km 5</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="portraits" data-index="1"
+           data-src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=1400&q=80"
+           data-title="Il volto della fatica" data-cat-label="Ritratti">
+        <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Ritratti</div>
+          <div class="masonry-item-title">Il volto della fatica</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="aerial" data-index="2"
+           data-src="https://images.unsplash.com/photo-1502904550040-7534597429ae?w=1400&q=80"
+           data-title="Partenza · Piazza Duomo" data-cat-label="Drone">
+        <img src="https://images.unsplash.com/photo-1502904550040-7534597429ae?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Drone</div>
+          <div class="masonry-item-title">Partenza · Piazza Duomo</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="action" data-index="3"
+           data-src="https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1400&q=80"
+           data-title="Sprint finale — rettilineo" data-cat-label="Action">
+        <img src="https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Action</div>
+          <div class="masonry-item-title">Sprint finale — rettilineo</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="detail" data-index="4"
+           data-src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=1400&q=80"
+           data-title="Numeri e nastro" data-cat-label="Dettagli">
+        <img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Dettagli</div>
+          <div class="masonry-item-title">Numeri e nastro</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="portraits" data-index="5"
+           data-src="https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=1400&q=80"
+           data-title="Abbraccio sul traguardo" data-cat-label="Ritratti">
+        <img src="https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Ritratti</div>
+          <div class="masonry-item-title">Abbraccio sul traguardo</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="aerial" data-index="6"
+           data-src="https://images.unsplash.com/photo-1593766788306-28561086694e?w=1400&q=80"
+           data-title="Serpentone al km 18" data-cat-label="Drone">
+        <img src="https://images.unsplash.com/photo-1593766788306-28561086694e?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Drone</div>
+          <div class="masonry-item-title">Serpentone al km 18</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="action" data-index="7"
+           data-src="https://images.unsplash.com/photo-1553688738-a278b9f063af?w=1400&q=80"
+           data-title="Duello a 400 metri" data-cat-label="Action">
+        <img src="https://images.unsplash.com/photo-1553688738-a278b9f063af?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Action</div>
+          <div class="masonry-item-title">Duello a 400 metri</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="detail" data-index="8"
+           data-src="https://images.unsplash.com/photo-1452626212852-811d58933cae?w=1400&q=80"
+           data-title="Medaglia · oro e sudata" data-cat-label="Dettagli">
+        <img src="https://images.unsplash.com/photo-1452626212852-811d58933cae?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Dettagli</div>
+          <div class="masonry-item-title">Medaglia · oro e sudata</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="portraits" data-index="9"
+           data-src="https://images.unsplash.com/photo-1530549387789-4c1017266635?w=1400&q=80"
+           data-title="Prima donna — podio" data-cat-label="Ritratti">
+        <img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Ritratti</div>
+          <div class="masonry-item-title">Prima donna — podio</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="action" data-index="10"
+           data-src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=1400&q=80"
+           data-title="Curva sotto il Castello" data-cat-label="Action">
+        <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Action</div>
+          <div class="masonry-item-title">Curva sotto il Castello</div>
+        </div>
+      </div>
+
+      <div class="masonry-item" data-cat="aerial" data-index="11"
+           data-src="https://images.unsplash.com/photo-1460472178825-e5240623afd5?w=1400&q=80"
+           data-title="Parco Sempione dall'alto" data-cat-label="Drone">
+        <img src="https://images.unsplash.com/photo-1460472178825-e5240623afd5?w=800&q=80" alt="" loading="lazy" />
+        <div class="masonry-item-overlay">
+          <div class="masonry-item-cat">Drone</div>
+          <div class="masonry-item-title">Parco Sempione dall'alto</div>
+        </div>
+      </div>
+
+    </div><!-- /masonry-grid -->
+  </section>
+
+  <!-- ── VIDEO REEL ── -->
+  <section class="video-section">
+    <div class="video-header reveal">
+      <div class="section-label">Produzione video</div>
+      <h2 class="section-title">Highlight Reel<br>12 minuti</h2>
+    </div>
+    <div class="video-wrap reveal" id="videoWrap">
+      <img class="video-thumb" src="https://images.unsplash.com/photo-1504370805625-d32c54b16100?w=1600&q=80" alt="Highlight reel thumbnail" loading="lazy" />
+      <div class="video-overlay-lines"></div>
+      <div class="video-play-btn">
+        <div class="play-circle">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <span class="video-play-label">Guarda il reel</span>
+      </div>
+    </div>
+    <div class="video-strip">
+      <div class="video-strip-item">
+        <div class="video-strip-dot"></div>
+        <span class="video-strip-text">12 min · Highlight reel completo</span>
+      </div>
+      <div class="video-strip-item">
+        <div class="video-strip-dot"></div>
+        <span class="video-strip-text">30 sec · Social cut verticale</span>
+      </div>
+      <div class="video-strip-item">
+        <div class="video-strip-dot"></div>
+        <span class="video-strip-text">4K UHD · Color graded</span>
+      </div>
+      <div class="video-strip-item">
+        <div class="video-strip-dot"></div>
+        <span class="video-strip-text">Colonna sonora licenziata</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RELATED PROJECTS ── -->
+  <section class="related-section">
+    <div class="related-header reveal">
+      <div class="section-label">Scopri altri lavori</div>
+      <h2 class="section-title">Progetti correlati</h2>
+    </div>
+    <div class="related-grid">
+      <a class="related-card reveal" href="#">
+        <img src="https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=800&q=80" alt="Swimming" loading="lazy" />
+        <div class="related-card-overlay">
+          <div class="related-card-cat">Sport — Campionati Nazionali</div>
+          <div class="related-card-title">Acqua & Velocità</div>
+        </div>
+      </a>
+      <a class="related-card reveal reveal-delay-1" href="#">
+        <img src="https://images.unsplash.com/photo-1599058917765-a780eda07a3e?w=800&q=80" alt="Football" loading="lazy" />
+        <div class="related-card-overlay">
+          <div class="related-card-cat">Calcio — Serie A Coverage</div>
+          <div class="related-card-title">Il Gol del Campione</div>
+        </div>
+      </a>
+      <a class="related-card reveal reveal-delay-2" href="#">
+        <img src="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=800&q=80" alt="Cycling" loading="lazy" />
+        <div class="related-card-overlay">
+          <div class="related-card-cat">Ciclismo — Gran Fondo 2024</div>
+          <div class="related-card-title">Sulle Alpi in Sella</div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="cta-section" id="contact">
+    <div class="cta-bg"></div>
+    <div class="reveal">
+      <div class="section-label" style="justify-content:center;">
+        Hai un progetto simile?
+      </div>
+      <h2 class="section-title">Raccontiamo<br>la tua storia</h2>
+      <div class="cta-divider"></div>
+      <p class="section-body">Che si tratti di una maratona, di un campionato o di un evento brand, portiamo la stessa cura e la stessa intensità in ogni progetto.</p>
+      <div style="display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;">
+        <a class="btn-primary" href="mailto:info@ugactionmedia.it">Scrivici subito</a>
+        <a class="btn-ghost" href="/#portfolio">Vedi il portfolio</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="nav-logo" href="/">UG<span style="color:var(--red)">ACTION</span>&nbsp;MEDIA</a>
+        <p>Fotografia e videomaking professionale per sport, eventi e brand. Basati a Milano, operiamo in tutta Italia e in Europa.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Servizi</h4>
+        <ul>
+          <li><a href="#">Sport Action</a></li>
+          <li><a href="#">Event Coverage</a></li>
+          <li><a href="#">Brand Shooting</a></li>
+          <li><a href="#">Video Production</a></li>
+          <li><a href="#">Drone & Aerial</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Studio</h4>
+        <ul>
+          <li><a href="#">Chi siamo</a></li>
+          <li><a href="#">Portfolio</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contatti</h4>
+        <ul>
+          <li><a href="#">info@ugactionmedia.it</a></li>
+          <li><a href="#">+39 000 000 0000</a></li>
+          <li><a href="#">Via del Corso, Milano</a></li>
+          <li><a href="#">P.IVA 00000000000</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 UG Action Media. Tutti i diritti riservati.</p>
+      <div class="social-links">
+        <a class="social-link" href="#" aria-label="Instagram">IG</a>
+        <a class="social-link" href="#" aria-label="YouTube">YT</a>
+        <a class="social-link" href="#" aria-label="LinkedIn">LN</a>
+        <a class="social-link" href="#" aria-label="TikTok">TK</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── LIGHTBOX ── -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Visualizzatore immagini">
+    <button class="lightbox-close" id="lbClose" aria-label="Chiudi">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <button class="lightbox-prev" id="lbPrev" aria-label="Precedente">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="lightbox-next" id="lbNext" aria-label="Successiva">
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="lightbox-inner">
+      <div class="lightbox-img-wrap">
+        <img id="lbImg" src="" alt="" />
+      </div>
+      <div class="lightbox-caption">
+        <div class="lightbox-caption-text">
+          <div class="lightbox-caption-cat" id="lbCat"></div>
+          <div class="lightbox-caption-title" id="lbTitle"></div>
+        </div>
+        <div class="lightbox-counter">
+          <span id="lbCurrent">01</span>/<span id="lbTotal">12</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    /* ── Intersection reveal ── */
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal, .stat-item').forEach(el => io.observe(el));
+
+    /* ── Navbar scroll ── */
+    window.addEventListener('scroll', () => {
+      document.querySelector('nav').style.background =
+        window.scrollY > 60 ? 'rgba(10,10,10,0.97)' : 'rgba(10,10,10,0.85)';
+    });
+
+    /* ── Gallery filter ── */
+    const items = Array.from(document.querySelectorAll('.masonry-item'));
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        items.forEach(item => {
+          const match = filter === 'all' || item.dataset.cat === filter;
+          item.style.display = match ? '' : 'none';
+        });
+      });
+    });
+
+    /* ── Lightbox ── */
+    const lightbox = document.getElementById('lightbox');
+    const lbImg    = document.getElementById('lbImg');
+    const lbCat    = document.getElementById('lbCat');
+    const lbTitle  = document.getElementById('lbTitle');
+    const lbCurrent = document.getElementById('lbCurrent');
+    const lbTotal  = document.getElementById('lbTotal');
+
+    let currentIndex = 0;
+    let visibleItems = [];
+
+    function openLightbox(index) {
+      visibleItems = items.filter(i => i.style.display !== 'none');
+      currentIndex = index;
+      showSlide(currentIndex);
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function showSlide(idx) {
+      const el = visibleItems[idx];
+      if (!el) return;
+      lbImg.src   = el.dataset.src;
+      lbCat.textContent   = el.dataset.catLabel;
+      lbTitle.textContent = el.dataset.title;
+      lbCurrent.textContent = String(idx + 1).padStart(2, '0');
+      lbTotal.textContent   = String(visibleItems.length).padStart(2, '0');
+      currentIndex = idx;
+    }
+
+    items.forEach((item, i) => {
+      item.addEventListener('click', () => {
+        visibleItems = items.filter(it => it.style.display !== 'none');
+        const visIdx = visibleItems.indexOf(item);
+        openLightbox(visIdx >= 0 ? visIdx : 0);
+      });
+    });
+
+    document.getElementById('lbClose').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+
+    document.getElementById('lbPrev').addEventListener('click', () => {
+      showSlide((currentIndex - 1 + visibleItems.length) % visibleItems.length);
+    });
+    document.getElementById('lbNext').addEventListener('click', () => {
+      showSlide((currentIndex + 1) % visibleItems.length);
+    });
+
+    document.addEventListener('keydown', e => {
+      if (!lightbox.classList.contains('open')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') showSlide((currentIndex - 1 + visibleItems.length) % visibleItems.length);
+      if (e.key === 'ArrowRight') showSlide((currentIndex + 1) % visibleItems.length);
+    });
+
+    /* featured shot lightbox */
+    document.querySelector('.featured-shot-wrap').addEventListener('click', () => {
+      visibleItems = items.filter(it => it.style.display !== 'none');
+      openLightbox(0);
+    });
+  </script>
+
 </Layout>
