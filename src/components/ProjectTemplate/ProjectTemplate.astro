@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import Footer from "../Home/Footer.astro";
 import PhotoCard from "../Home/PhotoCard.astro";
+import VideoPlayer from "../Home/VideoPlayer.astro";
 
 const { project } = Astro.props;
 
@@ -15,6 +16,8 @@ const res = await fetch(
 let media = await res.json();
 if (media.error) media = [];
 const photos = media.filter((media: any) => media.tipo === "image");
+const videos = media.filter((media: any) => media.tipo === "video");
+
 ---
 
 <Layout>
@@ -1210,25 +1213,7 @@ const photos = media.filter((media: any) => media.tipo === "image");
   <!-- ── PROJECT INFO ── -->
   <section class="project-info">
     <div class="project-description reveal">
-      <p>
-        La <strong>Milano City Marathon 2024</strong> ha radunato oltre 18.000 atleti
-        da 62 paesi lungo un percorso di 42,195 km che attraversa il cuore della città.
-        Il brief era chiaro: catturare non solo la fatica e la vittoria, ma l'anima
-        collettiva di un evento che trasforma Milano in un palcoscenico di emozioni.
-      </p>
-      <p>
-        Abbiamo dispiegato un team di cinque fotografi e due operatori video in
-        punti strategici del percorso, dalla partenza in Piazza Duomo fino alle
-        rampe finali del parco Sempione. Ogni immagine racconta una storia: il
-        crampo a 38 km, l'abbraccio sul traguardo, lo sguardo perso
-        nell'orizzonte durante quei chilometri solitari tra il 28 e il 32.
-      </p>
-      <p>
-        La post-produzione ha curato un editing coerente con l'identità
-        cromatica dell'evento — caldi dorati, contrasti vibranti — bilanciando
-        la grinta del reportage con la cura estetica richiesta dalla campagna
-        ufficiale.
-      </p>
+      <p>{project.descrizione}</p>
     </div>
     <div class="project-sidebar">
       <div class="sidebar-block reveal reveal-delay-1">
@@ -1241,24 +1226,10 @@ const photos = media.filter((media: any) => media.tipo === "image");
           <span class="tag">Post-produzione</span>
         </div>
       </div>
-      <!-- <div class="sidebar-block reveal reveal-delay-1">
-        <div class="sidebar-block-label">Equipment</div>
-        <div class="sidebar-block-value">
-          Canon R3 · Canon R5 Mark II<br />70–200mm f/2.8 · 24–70mm f/2.8<br
-          />400mm f/2.8 · DJI Mavic 3 Pro
-        </div>
-      </div>
-      <div class="sidebar-block reveal reveal-delay-2">
-        <div class="sidebar-block-label">Team</div>
-        <div class="sidebar-block-value">
-          5 fotografi · 2 operatori<br />1 pilota drone certificato<br />2
-          editor in post-produzione
-        </div>
-      </div> -->
       <div class="sidebar-block reveal reveal-delay-2">
         <div class="sidebar-block-label">Consegna</div>
         <div class="sidebar-block-value">
-          847 foto hi-res<br />12 min highlight reel<br />30 sec social cut
+          {project.scatti}
         </div>
       </div>
     </div>
@@ -1281,32 +1252,24 @@ const photos = media.filter((media: any) => media.tipo === "image");
     </div>
 
     <div class="masonry-grid" id="masonryGrid">
+      {videos.map((video: any) => (
+        <VideoPlayer
+          src={video.url}
+          controls={false}
+          autoplay={true}
+          loop={true}
+        />
+      ))}
       {photos.map((photo: any) => <PhotoCard photo={photo} />)}
     </div>
+
   </section>
 
   <!-- ── VIDEO REEL ── -->
   <section class="video-section">
     <div class="video-header reveal">
       <div class="section-label">Produzione video</div>
-      <h2 class="section-title">Highlight Reel<br />12 minuti</h2>
-    </div>
-    <div class="video-wrap reveal" id="videoWrap">
-      <img
-        class="video-thumb"
-        src="https://images.unsplash.com/photo-1504370805625-d32c54b16100?w=1600&q=80"
-        alt="Highlight reel thumbnail"
-        loading="lazy"
-      />
-      <div class="video-overlay-lines"></div>
-      <div class="video-play-btn">
-        <div class="play-circle">
-          <svg viewBox="0 0 24 24"
-            ><polygon points="5 3 19 12 5 21 5 3"></polygon></svg
-          >
-        </div>
-        <span class="video-play-label">Guarda il reel</span>
-      </div>
+      <h2 class="section-title">Highlight Reel</h2>
     </div>
   </section>
 

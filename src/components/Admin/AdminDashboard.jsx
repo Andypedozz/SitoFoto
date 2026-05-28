@@ -1,4 +1,4 @@
-// AdminDashboard.jsx - Versione completa e funzionante
+// AdminDashboard.jsx - Versione completa con Alert personalizzato
 import React, { useState, useEffect, useCallback } from 'react';
 import "../../styles/global.css";
 
@@ -6,6 +6,70 @@ import "../../styles/global.css";
 // API BASE
 // ============================================
 const API_BASE = '/api';
+
+// ============================================
+// COMPONENTE ALERT PERSONALIZZATO
+// ============================================
+function CustomAlert({ message, type, onClose }) {
+    useEffect(() => {
+        if (message) {
+            const timer = setTimeout(() => {
+                onClose();
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [message, onClose]);
+
+    if (!message) return null;
+
+    const alertStyles = {
+        success: 'bg-green-600/20 border-green-600/30 text-green-400',
+        error: 'bg-red-600/20 border-red-600/30 text-red-400',
+        info: 'bg-blue-600/20 border-blue-600/30 text-blue-400',
+        warning: 'bg-yellow-600/20 border-yellow-600/30 text-yellow-400'
+    };
+
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+
+    return (
+        <div className="fixed top-20 right-4 z-50 animate-slide-in">
+            <div className={`${alertStyles[type]} border rounded-lg p-4 min-w-[300px] max-w-md shadow-lg backdrop-blur-sm`}>
+                <div className="flex items-start gap-3">
+                    <div className="text-xl">{icons[type]}</div>
+                    <div className="flex-1">
+                        <p className="text-sm font-medium">{message}</p>
+                    </div>
+                    <button 
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-white transition-colors"
+                    >
+                        ✕
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Hook per gestire gli alert
+function useAlert() {
+    const [alert, setAlert] = useState({ message: '', type: 'info' });
+
+    const showAlert = (message, type = 'info') => {
+        setAlert({ message, type });
+    };
+
+    const hideAlert = () => {
+        setAlert({ message: '', type: 'info' });
+    };
+
+    return { alert, showAlert, hideAlert };
+}
 
 // ============================================
 // HOOK PERSONALIZZATI
@@ -21,9 +85,13 @@ function useMedia() {
         try {
             const res = await fetch(`${API_BASE}/media`);
             if (!res.ok) throw new Error('Errore caricamento media');
-            setMedia(await res.json());
+            const data = await res.json();
+            setMedia(Array.isArray(data) ? data : []);
+            return { success: true };
         } catch (err) {
             setError(err.message);
+            setMedia([]);
+            return { success: false, error: err.message };
         } finally {
             setIsLoading(false);
         }
@@ -31,22 +99,35 @@ function useMedia() {
 
     const uploadMedia = async (formData) => {
         try {
-            const res = await fetch(`${API_BASE}/media`, { method: 'POST', body: formData });
-            if (!res.ok) throw new Error('Errore upload');
+            const res = await fetch(`${API_BASE}/media`, { 
+                method: 'POST', 
+                body: formData 
+            });
+            
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore upload');
+            }
+            
             const result = await res.json();
-            setMedia(prev => [...result.data, ...prev]);
-            return { success: true };
+            if (result.success && result.data) {
+                setMedia(prev => [...result.data, ...prev]);
+            }
+            return { success: true, message: 'File caricati con successo!' };
         } catch (err) {
+            console.error('Upload error:', err);
             return { success: false, error: err.message };
         }
     };
 
     const deleteMedia = async (id) => {
         try {
-            await fetch(`${API_BASE}/media/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${API_BASE}/media/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Errore eliminazione');
             setMedia(prev => prev.filter(m => m.id !== id));
-            return { success: true };
+            return { success: true, message: 'Media eliminato con successo!' };
         } catch (err) {
+            console.error('Delete error:', err);
             return { success: false, error: err.message };
         }
     };
@@ -54,77 +135,127 @@ function useMedia() {
     return { media, isLoading, error, fetchMedia, uploadMedia, deleteMedia };
 }
 
-function useProgetti() {
+function useProgetti(showAlert) {
     const [progetti, setProgetti] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
-    const [formData, setFormData] = useState({ nome: '', slug: '', descrizione: '', copertina: '' });
+    const [formData, setFormData] = useState({ 
+        nome: '', 
+        slug: '', 
+        descrizione: '', 
+        copertina: '' 
+    });
 
     const fetchProgetti = useCallback(async () => {
         setIsLoading(true);
         try {
             const res = await fetch(`${API_BASE}/projects`);
             if (!res.ok) throw new Error('Errore caricamento progetti');
-            setProgetti(await res.json());
+            const data = await res.json();
+            setProgetti(Array.isArray(data) ? data : []);
         } catch (err) {
             setError(err.message);
+            setProgetti([]);
+            showAlert?.(err.message, 'error');
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [showAlert]);
 
     const createProgetto = async (data) => {
-        const res = await fetch(`${API_BASE}/projects`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error('Errore creazione');
-        const newProject = await res.json();
-        setProgetti(prev => [...prev, newProject.data]);
+        try {
+            const res = await fetch(`${API_BASE}/projects`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore creazione');
+            }
+            const newProject = await res.json();
+            setProgetti(prev => [...prev, newProject.data || newProject]);
+            showAlert?.(`Progetto "${data.nome}" creato con successo!`, 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Create error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
     };
 
     const updateProgetto = async (id, data) => {
-        const res = await fetch(`${API_BASE}/projects`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, ...data })
-        });
-        if (!res.ok) throw new Error('Errore aggiornamento');
-        setProgetti(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+        try {
+            const res = await fetch(`${API_BASE}/projects/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore aggiornamento');
+            }
+            setProgetti(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+            showAlert?.(`Progetto "${data.nome}" aggiornato con successo!`, 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Update error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
     };
 
     const deleteProgetto = async (id) => {
         if (!window.confirm('Sei sicuro di voler eliminare questo progetto?')) return;
-        await fetch(`${API_BASE}/projects`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id })
-        });
-        setProgetti(prev => prev.filter(p => p.id !== id));
+        try {
+            const res = await fetch(`${API_BASE}/projects`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            })
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore eliminazione');
+            }
+            setProgetti(prev => prev.filter(p => p.id !== id));
+            showAlert?.('Progetto eliminato con successo!', 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Delete error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
     };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
         if (name === 'nome' && !editingProject) {
-            const slug = value.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, '-');
+            const slug = value.toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
             setFormData(prev => ({ ...prev, slug }));
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        let result;
         if (editingProject) {
-            await updateProgetto(editingProject.id, formData);
+            result = await updateProgetto(editingProject.id, formData);
         } else {
-            await createProgetto(formData);
+            result = await createProgetto(formData);
         }
-        setFormData({ nome: '', slug: '', descrizione: '', copertina: '' });
-        setEditingProject(null);
-        setShowForm(false);
+        
+        if (result.success) {
+            setFormData({ nome: '', slug: '', descrizione: '', copertina: '' });
+            setEditingProject(null);
+            setShowForm(false);
+            await fetchProgetti();
+        }
     };
 
     const handleEdit = (project) => {
@@ -150,7 +281,7 @@ function useProgetti() {
 
     return {
         progetti, isLoading, error, showForm, editingProject, formData,
-        handleInputChange, handleSubmit, handleEdit, handleDelete: deleteProgetto,
+        handleInputChange, handleSubmit, handleEdit, deleteProgetto,
         setShowForm, resetForm, fetchProgetti
     };
 }
@@ -196,14 +327,14 @@ function Sidebar({ buttons, setPage, currentPage }) {
 }
 
 // ============================================
-// GESTIONE PROGETTI (CON MODIFICA FUNZIONANTE)
+// GESTIONE PROGETTI
 // ============================================
-function GestioneProgetti() {
+function GestioneProgetti({ showAlert }) {
     const { 
         progetti, isLoading, showForm, editingProject, formData, 
-        handleInputChange, handleSubmit, handleEdit, handleDelete, 
+        handleInputChange, handleSubmit, handleEdit, deleteProgetto, 
         setShowForm, resetForm, fetchProgetti 
-    } = useProgetti();
+    } = useProgetti(showAlert);
 
     if (isLoading) return <Panel><div className="text-center py-12 text-gray-500">Caricamento...</div></Panel>;
 
@@ -226,7 +357,7 @@ function GestioneProgetti() {
                             <th className="pb-3 font-medium">Slug</th>
                             <th className="pb-3 font-medium">Copertina</th>
                             <th className="pb-3 font-medium">Azioni</th>
-                        </tr>
+                         </tr>
                     </thead>
                     <tbody>
                         {progetti.map((progetto) => (
@@ -237,7 +368,7 @@ function GestioneProgetti() {
                                 <td className="py-3 text-gray-500">{progetto.copertina || '—'}</td>
                                 <td className="py-3">
                                     <button onClick={() => handleEdit(progetto)} className="text-red-600 hover:text-red-500 mr-3" title="Modifica">✎</button>
-                                    <button onClick={() => handleDelete(progetto.id)} className="text-red-600 hover:text-red-500" title="Elimina">🗑</button>
+                                    <button onClick={() => deleteProgetto(progetto.id)} className="text-red-600 hover:text-red-500" title="Elimina">🗑</button>
                                 </td>
                             </tr>
                         ))}
@@ -258,23 +389,54 @@ function GestioneProgetti() {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm text-gray-400 mb-1">Nome Progetto *</label>
-                            <input name="nome" value={formData.nome} onChange={handleInputChange} placeholder="Nome progetto" className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" required />
+                            <input 
+                                name="nome" 
+                                value={formData.nome} 
+                                onChange={handleInputChange} 
+                                placeholder="Nome progetto" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                required 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm text-gray-400 mb-1">Slug *</label>
-                            <input name="slug" value={formData.slug} onChange={handleInputChange} placeholder="slug-del-progetto" className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" required />
+                            <input 
+                                name="slug" 
+                                value={formData.slug} 
+                                onChange={handleInputChange} 
+                                placeholder="slug-del-progetto" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                required 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm text-gray-400 mb-1">Descrizione</label>
-                            <textarea name="descrizione" value={formData.descrizione} onChange={handleInputChange} placeholder="Descrizione del progetto" rows="3" className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white resize-y" />
+                            <textarea 
+                                name="descrizione" 
+                                value={formData.descrizione} 
+                                onChange={handleInputChange} 
+                                placeholder="Descrizione del progetto" 
+                                rows="3" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white resize-y" 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm text-gray-400 mb-1">Copertina</label>
-                            <input name="copertina" value={formData.copertina} onChange={handleInputChange} placeholder="nome-file.jpg" className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" />
+                            <input 
+                                name="copertina" 
+                                value={formData.copertina} 
+                                onChange={handleInputChange} 
+                                placeholder="URL copertina o nome file" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                            />
                         </div>
                         <div className="flex gap-3 pt-2">
-                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">{editingProject ? 'Aggiorna' : 'Crea'}</button>
-                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Annulla</button>
+                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                {editingProject ? 'Aggiorna' : 'Crea'}
+                            </button>
+                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                                Annulla
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -284,9 +446,9 @@ function GestioneProgetti() {
 }
 
 // ============================================
-// GESTIONE MEDIA (CON VISUALIZZAZIONE IMMAGINI)
+// GESTIONE MEDIA
 // ============================================
-function GestioneMedia() {
+function GestioneMedia({ showAlert }) {
     const [progetti, setProgetti] = useState([]);
     const [selectedProject, setSelectedProject] = useState('');
     const [previewMedia, setPreviewMedia] = useState(null);
@@ -294,15 +456,34 @@ function GestioneMedia() {
 
     useEffect(() => {
         fetchMedia();
-        fetch(`${API_BASE}/projects`).then(res => res.json()).then(setProgetti);
-    }, [fetchMedia]);
+        fetch(`${API_BASE}/projects`)
+            .then(res => res.json())
+            .then(data => setProgetti(Array.isArray(data) ? data : []))
+            .catch(err => {
+                console.error('Error fetching projects:', err);
+                showAlert('Errore nel caricamento dei progetti', 'error');
+            });
+    }, [fetchMedia, showAlert]);
 
     const handleUpload = async (files) => {
-        if (!selectedProject) { alert('Seleziona un progetto'); return; }
+        if (!selectedProject) { 
+            showAlert('Seleziona un progetto prima di caricare i file', 'warning');
+            return; 
+        }
+        
+        if (!files || files.length === 0) return;
+        
         const formData = new FormData();
         Array.from(files).forEach(f => formData.append('files', f));
         formData.append('idProgetto', selectedProject);
-        await uploadMedia(formData);
+        
+        const result = await uploadMedia(formData);
+        if (!result.success) {
+            showAlert(result.error || 'Errore durante l\'upload', 'error');
+        } else {
+            showAlert(`${files.length} file caricati con successo!`, 'success');
+            await fetchMedia();
+        }
     };
 
     const openPreview = (item) => {
@@ -311,6 +492,18 @@ function GestioneMedia() {
 
     const closePreview = () => {
         setPreviewMedia(null);
+    };
+
+    const handleDeleteMedia = async (id, e) => {
+        e.stopPropagation();
+        if (window.confirm('Sei sicuro di voler eliminare questo media?')) {
+            const result = await deleteMedia(id);
+            if (!result.success) {
+                showAlert(result.error, 'error');
+            } else {
+                showAlert('Media eliminato con successo!', 'success');
+            }
+        }
     };
 
     // Card media con anteprima cliccabile
@@ -329,9 +522,9 @@ function GestioneMedia() {
             </div>
             <div className="p-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400 truncate flex-1">{item.nome}</span>
+                    <span className="text-xs text-gray-400 truncate flex-1" title={item.nome}>{item.nome}</span>
                     <button 
-                        onClick={(e) => { e.stopPropagation(); deleteMedia(item.id); }} 
+                        onClick={(e) => handleDeleteMedia(item.id, e)} 
                         className="text-red-600 hover:text-red-500 text-sm ml-2"
                         title="Elimina"
                     >
@@ -346,6 +539,8 @@ function GestioneMedia() {
     // Modal per anteprima
     const PreviewModal = ({ item, onClose }) => {
         if (!item) return null;
+        const project = progetti.find(p => p.id === item.idProgetto);
+        
         return (
             <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" onClick={onClose}>
                 <div className="max-w-4xl max-h-full" onClick={(e) => e.stopPropagation()}>
@@ -358,7 +553,10 @@ function GestioneMedia() {
                         )}
                         <div className="mt-3 text-center text-white text-sm">
                             <p className="font-medium">{item.nome}</p>
-                            <p className="text-gray-400 text-xs mt-1">Progetto: {progetti.find(p => p.id === item.idProgetto)?.nome || '—'}</p>
+                            <p className="text-gray-400 text-xs mt-1">
+                                Tipo: {item.tipo === 'video' ? 'Video' : 'Immagine'} | 
+                                Progetto: {project?.nome || '—'}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -366,7 +564,7 @@ function GestioneMedia() {
         );
     };
 
-    if (isLoading) return <Panel><div className="text-center py-12 text-gray-500">Caricamento...</div></Panel>;
+    if (isLoading) return <Panel><div className="text-center py-12 text-gray-500">Caricamento media...</div></Panel>;
 
     // Raggruppa per progetto
     const progettiMap = progetti.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
@@ -382,13 +580,27 @@ function GestioneMedia() {
             <div className="space-y-4">
                 {/* Upload area */}
                 <div className="bg-black border border-red-900/30 rounded-lg p-4">
-                    <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white mb-3">
+                    <select 
+                        value={selectedProject} 
+                        onChange={(e) => setSelectedProject(e.target.value)} 
+                        className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white mb-3"
+                    >
                         <option value="">Seleziona progetto</option>
                         {progetti.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                     </select>
-                    <input type="file" multiple accept="image/*,video/*" onChange={(e) => handleUpload(e.target.files)} disabled={!selectedProject}
-                        className="w-full text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-red-600 file:text-white file:hover:bg-red-700 file:cursor-pointer" />
-                    <p className="text-xs text-gray-600 mt-2">📷 Clicca sulla card per visualizzare l'immagine/video</p>
+                    <input 
+                        type="file" 
+                        multiple 
+                        accept="image/*,video/*" 
+                        onChange={(e) => handleUpload(e.target.files)} 
+                        disabled={!selectedProject}
+                        className="w-full text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-red-600 file:text-white file:hover:bg-red-700 file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
+                    />
+                    <p className="text-xs text-gray-600 mt-2">
+                        📷 Clicca sulla card per visualizzare l'immagine/video
+                        <br />
+                        💡 Massimo 20MB per immagini, 100MB per video
+                    </p>
                 </div>
 
                 {/* Griglia media */}
@@ -406,7 +618,9 @@ function GestioneMedia() {
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-8 text-gray-500">Nessun media caricato</div>
+                    <div className="text-center py-8 text-gray-500">
+                        {media.length === 0 ? 'Nessun media caricato' : 'Caricamento in corso...'}
+                    </div>
                 )}
             </div>
 
@@ -419,18 +633,31 @@ function GestioneMedia() {
 // ============================================
 // GESTIONE HOMEPAGE
 // ============================================
-function GestioneHomepage() {
+function GestioneHomepage({ showAlert }) {
     const [progetti, setProgetti] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`${API_BASE}/projects`).then(res => res.json()).then(data => {
-            setProgetti(data);
-            setSelectedIds(data.filter(p => p.homepage).map(p => p.id));
-            setLoading(false);
-        });
-    }, []);
+        const fetchData = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/projects`);
+                const data = await res.json();
+                setProgetti(Array.isArray(data) ? data : []);
+                const homepageIds = (Array.isArray(data) ? data : [])
+                    .filter(p => p.homepage === 1 || p.homepage === true)
+                    .map(p => p.id);
+                setSelectedIds(homepageIds);
+            } catch (err) {
+                console.error('Error fetching projects:', err);
+                showAlert('Errore nel caricamento dei progetti', 'error');
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchData();
+    }, [showAlert]);
 
     const toggleProject = (id) => {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -451,12 +678,20 @@ function GestioneHomepage() {
     };
 
     const saveHomepage = async () => {
-        await fetch(`${API_BASE}/projects/homepage`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectIds: selectedIds })
-        });
-        alert('Configurazione salvata!');
+        try {
+            const res = await fetch(`${API_BASE}/projects/homepage`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectIds: selectedIds })
+            });
+            
+            if (!res.ok) throw new Error('Errore salvataggio');
+            
+            showAlert('Configurazione homepage salvata con successo!', 'success');
+        } catch (err) {
+            console.error('Save error:', err);
+            showAlert(err.message, 'error');
+        }
     };
 
     const selectedProjects = progetti.filter(p => selectedIds.includes(p.id));
@@ -473,14 +708,23 @@ function GestioneHomepage() {
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                         {availableProjects.map(p => (
                             <div key={p.id} className="flex justify-between items-center p-2 bg-black rounded border border-red-900/30">
-                                <div>
-                                    <div className="text-white text-sm">{p.nome}</div>
-                                    <div className="text-xs text-gray-500">{p.descrizione?.slice(0, 50)}</div>
+                                <div className="flex-1">
+                                    <div className="text-white text-sm font-medium">{p.nome}</div>
+                                    {p.descrizione && (
+                                        <div className="text-xs text-gray-500 mt-1">{p.descrizione.slice(0, 60)}</div>
+                                    )}
                                 </div>
-                                <button onClick={() => toggleProject(p.id)} className="px-3 py-1 text-sm bg-red-600/20 text-red-600 rounded border border-red-600/30">+ Seleziona</button>
+                                <button 
+                                    onClick={() => toggleProject(p.id)} 
+                                    className="px-3 py-1 text-sm bg-red-600/20 text-red-600 rounded border border-red-600/30 hover:bg-red-600/30 transition-colors"
+                                >
+                                    + Seleziona
+                                </button>
                             </div>
                         ))}
-                        {availableProjects.length === 0 && <div className="text-center py-8 text-gray-500">Tutti i progetti sono in homepage</div>}
+                        {availableProjects.length === 0 && (
+                            <div className="text-center py-8 text-gray-500">Tutti i progetti sono in homepage</div>
+                        )}
                     </div>
                 </div>
 
@@ -492,23 +736,49 @@ function GestioneHomepage() {
                             <div key={p.id} className="flex justify-between items-center p-2 bg-black rounded border border-red-900/30">
                                 <div className="flex-1">
                                     <span className="text-gray-500 text-xs mr-2">#{idx + 1}</span>
-                                    <span className="text-white text-sm">{p.nome}</span>
+                                    <span className="text-white text-sm font-medium">{p.nome}</span>
                                 </div>
                                 <div className="flex gap-1">
-                                    <button onClick={() => moveUp(idx)} disabled={idx === 0} className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-30">↑</button>
-                                    <button onClick={() => moveDown(idx)} disabled={idx === selectedIds.length - 1} className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-30">↓</button>
-                                    <button onClick={() => toggleProject(p.id)} className="px-2 py-1 text-red-600">✕</button>
+                                    <button 
+                                        onClick={() => moveUp(idx)} 
+                                        disabled={idx === 0} 
+                                        className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        title="Sposta su"
+                                    >
+                                        ↑
+                                    </button>
+                                    <button 
+                                        onClick={() => moveDown(idx)} 
+                                        disabled={idx === selectedIds.length - 1} 
+                                        className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        title="Sposta giù"
+                                    >
+                                        ↓
+                                    </button>
+                                    <button 
+                                        onClick={() => toggleProject(p.id)} 
+                                        className="px-2 py-1 text-red-600 hover:text-red-500 transition-colors"
+                                        title="Rimuovi"
+                                    >
+                                        ✕
+                                    </button>
                                 </div>
                             </div>
                         ))}
-                        {selectedIds.length === 0 && <div className="text-center py-8 text-gray-500">Nessun progetto selezionato</div>}
+                        {selectedIds.length === 0 && (
+                            <div className="text-center py-8 text-gray-500">Nessun progetto selezionato per la homepage</div>
+                        )}
                     </div>
                 </div>
             </div>
 
             <div className="mt-6 pt-4 border-t border-red-900/30 flex justify-between items-center">
-                <span className="text-sm text-gray-500">{selectedIds.length} progetti selezionati</span>
-                <button onClick={saveHomepage} className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">💾 Salva</button>
+                <button 
+                    onClick={saveHomepage} 
+                    className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                    💾 Salva configurazione homepage
+                </button>
             </div>
         </Panel>
     );
@@ -519,11 +789,12 @@ function GestioneHomepage() {
 // ============================================
 export default function AdminDashboard() {
     const [page, setPage] = useState('Gestione Progetti');
+    const { alert, showAlert, hideAlert } = useAlert();
 
     const pages = {
-        'Gestione Progetti': <GestioneProgetti />,
-        'Gestione Media': <GestioneMedia />,
-        'Gestione Homepage': <GestioneHomepage />
+        'Gestione Progetti': <GestioneProgetti showAlert={showAlert} />,
+        'Gestione Media': <GestioneMedia showAlert={showAlert} />,
+        'Gestione Homepage': <GestioneHomepage showAlert={showAlert} />
     };
 
     const buttons = {
@@ -532,10 +803,19 @@ export default function AdminDashboard() {
         'Gestione Homepage': () => {}
     };
 
-    const pageIcon = { 'Gestione Progetti': '📊', 'Gestione Media': '🎬', 'Gestione Homepage': '🏠' };
+    const pageIcon = { 
+        'Gestione Progetti': '📊', 
+        'Gestione Media': '🎬', 
+        'Gestione Homepage': '🏠' 
+    };
 
     return (
         <div className="min-h-screen bg-[rgb(19,19,19)] text-white flex">
+            <CustomAlert 
+                message={alert.message} 
+                type={alert.type} 
+                onClose={hideAlert} 
+            />
             <Sidebar buttons={buttons} setPage={setPage} currentPage={page} />
             <main className="flex-1 ml-64 min-h-screen p-6">
                 <div className="mb-6">

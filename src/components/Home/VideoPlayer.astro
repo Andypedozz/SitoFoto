@@ -1,7 +1,7 @@
 ---
 interface Props {
   src: string;
-  type?: "local" | "youtube" | "external";
+  type?: "local" | "external";
   autoplay?: boolean;
   controls?: boolean;
   width?: string | number;
@@ -23,55 +23,23 @@ const {
   class: className = "",
 } = Astro.props;
 
-function getYoutubeEmbedUrl(url: string) {
-  try {
-    const parsed = new URL(url);
-
-    // youtube.com/watch?v=
-    if (parsed.hostname.includes("youtube.com")) {
-      const videoId = parsed.searchParams.get("v");
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}?autoplay=${
-          autoplay ? 1 : 0
-        }&controls=${controls ? 1 : 0}&mute=${muted ? 1 : 0}&loop=${
-          loop ? 1 : 0
-        }`;
-      }
-    }
-
-    // youtu.be/
-    if (parsed.hostname.includes("youtu.be")) {
-      const videoId = parsed.pathname.replace("/", "");
-
-      return `https://www.youtube.com/embed/${videoId}?autoplay=${
-        autoplay ? 1 : 0
-      }&controls=${controls ? 1 : 0}&mute=${muted ? 1 : 0}&loop=${
-        loop ? 1 : 0
-      }`;
-    }
-  } catch (err) {
-    console.error("URL YouTube non valida", err);
-  }
-
-  return "";
-}
-
-const isYoutube = type === "youtube";
-const iframeSrc = isYoutube ? getYoutubeEmbedUrl(src) : src;
+/**
+ * Converte numeri in px automaticamente
+ */
+const normalizeSize = (value: string | number) =>
+  typeof value === "number" ? `${value}px` : value;
 ---
 
 <div
   class={`video-player ${className}`}
-  style={`width:${width}; height:${height};`}
+  style={`width:${normalizeSize(width)}; height:${normalizeSize(height)};`}
 >
   {
-    isYoutube || type === "external" ? (
+    type === "external" ? (
       <iframe
-        src={iframeSrc}
-        width="100%"
-        height="100%"
+        src={src}
         frameborder="0"
-        allow={`accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
       />
     ) : (
@@ -82,8 +50,6 @@ const iframeSrc = isYoutube ? getYoutubeEmbedUrl(src) : src;
         muted={muted}
         loop={loop}
         playsinline
-        width="100%"
-        height="100%"
       >
         Il tuo browser non supporta il tag video.
       </video>
@@ -101,7 +67,14 @@ const iframeSrc = isYoutube ? getYoutubeEmbedUrl(src) : src;
   .video-player video {
     display: block;
     border: none;
+
+    /* IMPORTANTISSIMO:
+       usa sempre le dimensioni del wrapper */
     width: 100%;
     height: 100%;
+  }
+
+  .video-player video {
+    object-fit: contain;
   }
 </style>
