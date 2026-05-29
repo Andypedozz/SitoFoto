@@ -1,7 +1,7 @@
 ---
 import ProjectCard from "./ProjectCard.astro";
 
-const { projects } = Astro.props;
+const { projects, categories } = Astro.props;
 ---
 <section class="portfolio" id="portfolio">
     <div class="portfolio-header reveal">
@@ -9,12 +9,12 @@ const { projects } = Astro.props;
             <div class="section-label">Il nostro lavoro</div>
             <h2 class="section-title">Portfolio Selezionato</h2>
         </div>
-        <div class="filter-tabs">
+        <!-- <div class="filter-tabs">
             <button class="filter-tab active" data-filter="all">Tutto</button>
-            <button class="filter-tab" data-filter="sport">Sport</button>
-            <button class="filter-tab" data-filter="eventi">Eventi</button>
-            <button class="filter-tab" data-filter="ritratti">Ritratti</button>
-        </div>
+            {categories.map((category: any) => (
+                <button class="filter-tab" data-filter={category.nome}>{category.nome}</button>
+            ))}
+        </div> -->
     </div>
 
     <div class="portfolio-controls">

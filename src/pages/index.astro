@@ -22,15 +22,17 @@ const headerLinks = [
 
 const res = await fetch(new URL("/api/projects/homepage", Astro.request.url));
 const homeProjects = await res.json();
+const res2 = await fetch(new URL("/api/categories", Astro.request.url));
+const categories = await res2.json();
 
-const bannerLogos = [];
+const bannerLogos: any = [];
 ---
 
 <Layout>
   <Header links={headerLinks} />
   <Hero />
   <Stats />
-  <Portfolio projects={homeProjects} />
+  <Portfolio projects={homeProjects} categories={categories} />
   {bannerLogos.length > 0 && <LogoBanner logos={bannerLogos} />}
   <About />
   <Featured />

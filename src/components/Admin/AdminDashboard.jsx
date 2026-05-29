@@ -1,4 +1,4 @@
-// AdminDashboard.jsx - Versione completa con Alert personalizzato
+// AdminDashboard.jsx - Versione completa con Alert personalizzato e Gestione Categorie
 import React, { useState, useEffect, useCallback } from 'react';
 import "../../styles/global.css";
 
@@ -38,7 +38,7 @@ function CustomAlert({ message, type, onClose }) {
 
     return (
         <div className="fixed top-20 right-4 z-50 animate-slide-in">
-            <div className={`${alertStyles[type]} border rounded-lg p-4 min-w-[300px] max-w-md shadow-lg backdrop-blur-sm`}>
+            <div className={`${alertStyles[type]} border rounded-lg p-4 min-w-75 max-w-md shadow-lg backdrop-blur-sm`}>
                 <div className="flex items-start gap-3">
                     <div className="text-xl">{icons[type]}</div>
                     <div className="flex-1">
@@ -135,6 +135,33 @@ function useMedia() {
     return { media, isLoading, error, fetchMedia, uploadMedia, deleteMedia };
 }
 
+function useCategorie(showAlert) {
+    const [categorie, setCategorie] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchCategorie = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${API_BASE}/categories`);
+            if (!res.ok) throw new Error('Errore caricamento categorie');
+            const data = await res.json();
+            setCategorie(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Fetch error:', err);
+            setCategorie([]);
+            showAlert?.(err.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showAlert]);
+
+    useEffect(() => {
+        fetchCategorie();
+    }, [fetchCategorie]);
+
+    return { categorie, isLoading, fetchCategorie };
+}
+
 function useProgetti(showAlert) {
     const [progetti, setProgetti] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -145,7 +172,8 @@ function useProgetti(showAlert) {
         nome: '', 
         slug: '', 
         descrizione: '', 
-        copertina: '' 
+        copertina: '',
+        idCategoria: ''
     });
 
     const fetchProgetti = useCallback(async () => {
@@ -166,17 +194,23 @@ function useProgetti(showAlert) {
 
     const createProgetto = async (data) => {
         try {
+            // Prepare data - convert empty idCategoria to null
+            const projectData = {
+                ...data,
+                idCategoria: data.idCategoria === '' || data.idCategoria === 'null' ? null : parseInt(data.idCategoria)
+            };
+
             const res = await fetch(`${API_BASE}/projects`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(projectData)
             });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.error || 'Errore creazione');
+                throw new Error(errorData.error || errorData.message || 'Errore creazione');
             }
             const newProject = await res.json();
-            setProgetti(prev => [...prev, newProject.data || newProject]);
+            setProgetti(prev => [...prev, newProject]);
             showAlert?.(`Progetto "${data.nome}" creato con successo!`, 'success');
             return { success: true };
         } catch (err) {
@@ -188,16 +222,22 @@ function useProgetti(showAlert) {
 
     const updateProgetto = async (id, data) => {
         try {
-            const res = await fetch(`${API_BASE}/projects/${id}`, {
+            const projectData = {
+                ...data,
+                idCategoria: data.idCategoria === '' || data.idCategoria === 'null' ? null : parseInt(data.idCategoria)
+            };
+
+            const res = await fetch(`${API_BASE}/projects`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify({ id, ...projectData })
             });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.error || 'Errore aggiornamento');
+                throw new Error(errorData.error || errorData.message || 'Errore aggiornamento');
             }
-            setProgetti(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+            const updatedProject = await res.json();
+            setProgetti(prev => prev.map(p => p.id === id ? updatedProject : p));
             showAlert?.(`Progetto "${data.nome}" aggiornato con successo!`, 'success');
             return { success: true };
         } catch (err) {
@@ -214,10 +254,10 @@ function useProgetti(showAlert) {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id })
-            })
+            });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.error || 'Errore eliminazione');
+                throw new Error(errorData.error || errorData.message || 'Errore eliminazione');
             }
             setProgetti(prev => prev.filter(p => p.id !== id));
             showAlert?.('Progetto eliminato con successo!', 'success');
@@ -251,7 +291,7 @@ function useProgetti(showAlert) {
         }
         
         if (result.success) {
-            setFormData({ nome: '', slug: '', descrizione: '', copertina: '' });
+            setFormData({ nome: '', slug: '', descrizione: '', copertina: '', idCategoria: '' });
             setEditingProject(null);
             setShowForm(false);
             await fetchProgetti();
@@ -264,14 +304,15 @@ function useProgetti(showAlert) {
             nome: project.nome,
             slug: project.slug,
             descrizione: project.descrizione || '',
-            copertina: project.copertina || ''
+            copertina: project.copertina || '',
+            idCategoria: project.idCategoria?.toString() || ''
         });
         setShowForm(true);
     };
 
     const resetForm = () => {
         setEditingProject(null);
-        setFormData({ nome: '', slug: '', descrizione: '', copertina: '' });
+        setFormData({ nome: '', slug: '', descrizione: '', copertina: '', idCategoria: '' });
         setShowForm(false);
     };
 
@@ -283,6 +324,140 @@ function useProgetti(showAlert) {
         progetti, isLoading, error, showForm, editingProject, formData,
         handleInputChange, handleSubmit, handleEdit, deleteProgetto,
         setShowForm, resetForm, fetchProgetti
+    };
+}
+
+// ============================================
+// HOOK PER GESTIONE CATEGORIE (CRUD completo)
+// ============================================
+function useCategorieManagement(showAlert) {
+    const [categorie, setCategorie] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [showForm, setShowForm] = useState(false);
+    const [editingCategoria, setEditingCategoria] = useState(null);
+    const [formData, setFormData] = useState({ nome: '' });
+
+    const fetchCategorie = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${API_BASE}/categories`);
+            if (!res.ok) throw new Error('Errore caricamento categorie');
+            const data = await res.json();
+            setCategorie(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Fetch error:', err);
+            setCategorie([]);
+            showAlert?.(err.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showAlert]);
+
+    const createCategoria = async (data) => {
+        try {
+            const res = await fetch(`${API_BASE}/categories`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore creazione');
+            }
+            await fetchCategorie();
+            showAlert?.(`Categoria "${data.nome}" creata con successo!`, 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Create error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
+    };
+
+    const updateCategoria = async (id, data) => {
+        try {
+            const res = await fetch(`${API_BASE}/categories`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, ...data })
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore aggiornamento');
+            }
+            await fetchCategorie();
+            showAlert?.(`Categoria "${data.nome}" aggiornata con successo!`, 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Update error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
+    };
+
+    const deleteCategoria = async (id, nome) => {
+        if (!window.confirm(`Sei sicuro di voler eliminare la categoria "${nome}"?`)) return;
+        try {
+            const res = await fetch(`${API_BASE}/categories`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore eliminazione');
+            }
+            await fetchCategorie();
+            showAlert?.(`Categoria "${nome}" eliminata con successo!`, 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Delete error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        let result;
+        if (editingCategoria) {
+            result = await updateCategoria(editingCategoria.id, formData);
+        } else {
+            result = await createCategoria(formData);
+        }
+        
+        if (result.success) {
+            setFormData({ nome: '' });
+            setEditingCategoria(null);
+            setShowForm(false);
+        }
+    };
+
+    const handleEdit = (categoria) => {
+        setEditingCategoria(categoria);
+        setFormData({ nome: categoria.nome });
+        setShowForm(true);
+    };
+
+    const resetForm = () => {
+        setEditingCategoria(null);
+        setFormData({ nome: '' });
+        setShowForm(false);
+    };
+
+    useEffect(() => {
+        fetchCategorie();
+    }, [fetchCategorie]);
+
+    return {
+        categorie, isLoading, showForm, editingCategoria, formData,
+        handleInputChange, handleSubmit, handleEdit, deleteCategoria,
+        setShowForm, resetForm
     };
 }
 
@@ -327,7 +502,7 @@ function Sidebar({ buttons, setPage, currentPage }) {
 }
 
 // ============================================
-// GESTIONE PROGETTI
+// GESTIONE PROGETTI (con categoria)
 // ============================================
 function GestioneProgetti({ showAlert }) {
     const { 
@@ -335,8 +510,21 @@ function GestioneProgetti({ showAlert }) {
         handleInputChange, handleSubmit, handleEdit, deleteProgetto, 
         setShowForm, resetForm, fetchProgetti 
     } = useProgetti(showAlert);
+    
+    const { categorie, isLoading: isLoadingCategorie } = useCategorie(showAlert);
 
-    if (isLoading) return <Panel><div className="text-center py-12 text-gray-500">Caricamento...</div></Panel>;
+    // Helper per ottenere il nome della categoria
+    const getCategoriaNome = (idCategoria) => {
+        if (!idCategoria) return <span className="text-gray-500 text-xs">—</span>;
+        const categoria = categorie.find(c => c.id === idCategoria);
+        return categoria ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600">
+                🏷️ {categoria.nome}
+            </span>
+        ) : <span className="text-gray-500 text-xs">ID: {idCategoria}</span>;
+    };
+
+    if (isLoading || isLoadingCategorie) return <Panel><div className="text-center py-12 text-gray-500">Caricamento...</div></Panel>;
 
     return (
         <Panel>
@@ -355,9 +543,10 @@ function GestioneProgetti({ showAlert }) {
                             <th className="pb-3 font-medium">ID</th>
                             <th className="pb-3 font-medium">Nome</th>
                             <th className="pb-3 font-medium">Slug</th>
+                            <th className="pb-3 font-medium">Categoria</th>
                             <th className="pb-3 font-medium">Copertina</th>
                             <th className="pb-3 font-medium">Azioni</th>
-                         </tr>
+                        </tr>
                     </thead>
                     <tbody>
                         {progetti.map((progetto) => (
@@ -365,6 +554,7 @@ function GestioneProgetti({ showAlert }) {
                                 <td className="py-3 text-gray-400">{progetto.id}</td>
                                 <td className="py-3"><span className="text-white font-medium">{progetto.nome}</span></td>
                                 <td className="py-3"><span className="text-gray-400 text-xs">/{progetto.slug}</span></td>
+                                <td className="py-3">{getCategoriaNome(progetto.idCategoria)}</td>
                                 <td className="py-3 text-gray-500">{progetto.copertina || '—'}</td>
                                 <td className="py-3">
                                     <button onClick={() => handleEdit(progetto)} className="text-red-600 hover:text-red-500 mr-3" title="Modifica">✎</button>
@@ -373,7 +563,9 @@ function GestioneProgetti({ showAlert }) {
                             </tr>
                         ))}
                         {progetti.length === 0 && (
-                            <tr><td colSpan="5" className="py-8 text-center text-gray-500">Nessun progetto</td></tr>
+                            <tr>
+                                <td colSpan="6" className="py-8 text-center text-gray-500">Nessun progetto</td>
+                            </tr>
                         )}
                     </tbody>
                 </table>
@@ -410,6 +602,25 @@ function GestioneProgetti({ showAlert }) {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm text-gray-400 mb-1">Categoria</label>
+                            <select 
+                                name="idCategoria" 
+                                value={formData.idCategoria} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white"
+                            >
+                                <option value="">— Nessuna categoria —</option>
+                                {categorie.map(categoria => (
+                                    <option key={categoria.id} value={categoria.id}>
+                                        🏷️ {categoria.nome}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-gray-500 mt-1">
+                                💡 Puoi gestire le categorie nella sezione "Gestione Categorie"
+                            </p>
+                        </div>
+                        <div>
                             <label className="block text-sm text-gray-400 mb-1">Descrizione</label>
                             <textarea 
                                 name="descrizione" 
@@ -433,6 +644,129 @@ function GestioneProgetti({ showAlert }) {
                         <div className="flex gap-3 pt-2">
                             <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                                 {editingProject ? 'Aggiorna' : 'Crea'}
+                            </button>
+                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                                Annulla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+        </Panel>
+    );
+}
+
+// ============================================
+// GESTIONE CATEGORIE
+// ============================================
+function GestioneCategorie({ showAlert }) {
+    const { 
+        categorie, isLoading, showForm, editingCategoria, formData,
+        handleInputChange, handleSubmit, handleEdit, deleteCategoria,
+        setShowForm, resetForm
+    } = useCategorieManagement(showAlert);
+
+    if (isLoading) return <Panel><div className="text-center py-12 text-gray-500">Caricamento...</div></Panel>;
+
+    return (
+        <Panel>
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                    <span className="px-2 py-1 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600">
+                        {categorie.length} categorie
+                    </span>
+                    <span className="text-xs text-gray-500">
+                        🏷️ Gestisci le categorie per i tuoi progetti
+                    </span>
+                </div>
+                <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                    {showForm ? '✕ Chiudi' : '+ Nuova Categoria'}
+                </button>
+            </div>
+
+            {/* Tabella categorie */}
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead className="border-b border-red-900/30">
+                        <tr className="text-left text-gray-400">
+                            <th className="pb-3 font-medium w-16">ID</th>
+                            <th className="pb-3 font-medium">Nome</th>
+                            <th className="pb-3 font-medium w-32">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {categorie.map((categoria) => (
+                            <tr key={categoria.id} className="border-b border-red-900/20 hover:bg-red-600/5">
+                                <td className="py-3 text-gray-400">{categoria.id}</td>
+                                <td className="py-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg">🏷️</span>
+                                        <span className="text-white font-medium">{categoria.nome}</span>
+                                    </div>
+                                </td>
+                                <td className="py-3">
+                                    <button 
+                                        onClick={() => handleEdit(categoria)} 
+                                        className="text-red-600 hover:text-red-500 mr-3" 
+                                        title="Modifica"
+                                    >
+                                        ✎
+                                    </button>
+                                    <button 
+                                        onClick={() => deleteCategoria(categoria.id, categoria.nome)} 
+                                        className="text-red-600 hover:text-red-500" 
+                                        title="Elimina"
+                                    >
+                                        🗑
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        {categorie.length === 0 && (
+                            <tr>
+                                <td colSpan="3" className="py-8 text-center text-gray-500">
+                                    Nessuna categoria presente
+                                    <div className="text-xs mt-1 text-gray-600">
+                                        Clicca "+ Nuova Categoria" per aggiungerne una
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Form di modifica/creazione */}
+            {showForm && (
+                <div className="mt-6 pt-6 border-t border-red-900/30">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-white font-medium flex items-center gap-2">
+                            <span>🏷️</span>
+                            {editingCategoria ? '✎ Modifica Categoria' : '➕ Nuova Categoria'}
+                        </h3>
+                        <button onClick={resetForm} className="text-gray-400 hover:text-white">✕</button>
+                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-1">
+                                Nome Categoria *
+                                {!editingCategoria && (
+                                    <span className="text-xs text-gray-500 ml-2">(es: Frontend, Backend, Design)</span>
+                                )}
+                            </label>
+                            <input 
+                                name="nome" 
+                                value={formData.nome} 
+                                onChange={handleInputChange} 
+                                placeholder="Inserisci il nome della categoria" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                required 
+                                autoFocus
+                            />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                {editingCategoria ? 'Aggiorna' : 'Crea'}
                             </button>
                             <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
                                 Annulla
@@ -794,19 +1128,22 @@ export default function AdminDashboard() {
     const pages = {
         'Gestione Progetti': <GestioneProgetti showAlert={showAlert} />,
         'Gestione Media': <GestioneMedia showAlert={showAlert} />,
-        'Gestione Homepage': <GestioneHomepage showAlert={showAlert} />
+        'Gestione Homepage': <GestioneHomepage showAlert={showAlert} />,
+        'Gestione Categorie': <GestioneCategorie showAlert={showAlert} />
     };
 
     const buttons = {
         'Gestione Progetti': () => {},
         'Gestione Media': () => {},
-        'Gestione Homepage': () => {}
+        'Gestione Homepage': () => {},
+        'Gestione Categorie': () => {}
     };
 
     const pageIcon = { 
         'Gestione Progetti': '📊', 
         'Gestione Media': '🎬', 
-        'Gestione Homepage': '🏠' 
+        'Gestione Homepage': '🏠',
+        'Gestione Categorie': '🏷️'
     };
 
     return (

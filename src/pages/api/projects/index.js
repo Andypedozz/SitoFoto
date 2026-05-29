@@ -6,6 +6,7 @@ export async function GET({ request }) {
         const url = new URL(request.url);
         const id = url.searchParams.get("id");
         const slug = url.searchParams.get("slug");
+        const categoria = url.searchParams.get("categoria");
         const homepage = url.searchParams.get("homepage");
 
         if (id) {
@@ -28,6 +29,18 @@ export async function GET({ request }) {
 
             return new Response(JSON.stringify(result), {
                 status: result ? 200 : 404,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        if (categoria) {
+            const result = (await db.execute(
+                "SELECT * FROM Progetto WHERE idCategoria = ?",
+                [categoria]
+            )).rows ?? [];
+
+            return new Response(JSON.stringify(result), {
+                status: 200,
                 headers: { "Content-Type": "application/json" }
             });
         }
@@ -72,7 +85,8 @@ export async function POST({ request }) {
 
         await db.execute(
             "INSERT INTO Progetto (nome, slug, copertina, descrizione, homepage) VALUES (?, ?, ?, ?, ?)",
-            [data.nome, data.slug, data.copertina, data.descrizione, 1]
+            "INSERT INTO Progetto (nome, slug, copertina, descrizione, homepage, evidenza, idCategoria, scatti) VALUES (?, ?, ?, ?, ?)",
+            [data.nome, data.slug, data.copertina, data.descrizione, 1, 1, data.idCategoria, 0]
         );
 
         const newProject = (await db.execute(
@@ -104,6 +118,8 @@ export async function PUT({ request }) {
     try {
         const { id, ...data } = await request.json();
 
+        console.log(data);
+
         if (!id) {
             return new Response(JSON.stringify({
                 error: true,
@@ -115,8 +131,8 @@ export async function PUT({ request }) {
         }
 
         await db.execute(
-            "UPDATE Progetto SET nome = ?, slug = ?, copertina = ?, descrizione = ? WHERE id = ?",
-            [data.nome, data.slug, data.copertina, data.descrizione, id]
+            "UPDATE Progetto SET nome = ?, slug = ?, copertina = ?, descrizione = ?, idCategoria = ? WHERE id = ?",
+            [data.nome, data.slug, data.copertina, data.descrizione, data.idCategoria, id]
         );
 
         const updatedProject = (await db.execute(
