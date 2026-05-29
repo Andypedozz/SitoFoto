@@ -657,6 +657,335 @@ function GestioneProgetti({ showAlert }) {
 }
 
 // ============================================
+// GESTIONE RECENSIONI
+// ============================================
+
+// Hook per gestire le recensioni
+function useRecensioni(showAlert) {
+    const [recensioni, setRecensioni] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [showForm, setShowForm] = useState(false);
+    const [editingRecensione, setEditingRecensione] = useState(null);
+    const [formData, setFormData] = useState({
+        nome: '',
+        qualifica: '',
+        recensione: ''
+    });
+
+    const fetchRecensioni = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${API_BASE}/feedbacks`);
+            if (!res.ok) throw new Error('Errore caricamento recensioni');
+            const data = await res.json();
+            setRecensioni(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Fetch error:', err);
+            setRecensioni([]);
+            showAlert?.(err.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showAlert]);
+
+    const createRecensione = async (data) => {
+        try {
+            const res = await fetch(`${API_BASE}/feedbacks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore creazione recensione');
+            }
+            await fetchRecensioni();
+            showAlert?.('Recensione creata con successo!', 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Create error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
+    };
+
+    const updateRecensione = async (id, data) => {
+        try {
+            const res = await fetch(`${API_BASE}/feedbacks`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, ...data })
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore aggiornamento recensione');
+            }
+            await fetchRecensioni();
+            showAlert?.('Recensione aggiornata con successo!', 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Update error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
+    };
+
+    const deleteRecensione = async (id, nome) => {
+        if (!window.confirm(`Sei sicuro di voler eliminare la recensione di "${nome}"?`)) return;
+        try {
+            const res = await fetch(`${API_BASE}/feedbacks`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Errore eliminazione recensione');
+            }
+            await fetchRecensioni();
+            showAlert?.(`Recensione di "${nome}" eliminata con successo!`, 'success');
+            return { success: true };
+        } catch (err) {
+            console.error('Delete error:', err);
+            showAlert?.(err.message, 'error');
+            return { success: false, error: err.message };
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!formData.nome.trim()) {
+            showAlert?.('Il nome è obbligatorio', 'warning');
+            return;
+        }
+        if (!formData.recensione.trim()) {
+            showAlert?.('La recensione è obbligatoria', 'warning');
+            return;
+        }
+        
+        let result;
+        if (editingRecensione) {
+            result = await updateRecensione(editingRecensione.id, formData);
+        } else {
+            result = await createRecensione(formData);
+        }
+        
+        if (result.success) {
+            setFormData({ nome: '', qualifica: '', recensione: '' });
+            setEditingRecensione(null);
+            setShowForm(false);
+        }
+    };
+
+    const handleEdit = (recensione) => {
+        setEditingRecensione(recensione);
+        setFormData({
+            nome: recensione.nome || '',
+            qualifica: recensione.qualifica || '',
+            recensione: recensione.recensione || ''
+        });
+        setShowForm(true);
+    };
+
+    const resetForm = () => {
+        setEditingRecensione(null);
+        setFormData({ nome: '', qualifica: '', recensione: '' });
+        setShowForm(false);
+    };
+
+    useEffect(() => {
+        fetchRecensioni();
+    }, [fetchRecensioni]);
+
+    return {
+        recensioni, isLoading, showForm, editingRecensione, formData,
+        handleInputChange, handleSubmit, handleEdit, deleteRecensione,
+        setShowForm, resetForm, fetchRecensioni
+    };
+}
+
+function GestioneRecensioni({ showAlert }) {
+    const {
+        recensioni, isLoading, showForm, editingRecensione, formData,
+        handleInputChange, handleSubmit, handleEdit, deleteRecensione,
+        setShowForm, resetForm
+    } = useRecensioni(showAlert);
+
+    // Funzione per troncare il testo
+    const truncateText = (text, maxLength = 100) => {
+        if (!text) return '';
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    };
+
+    if (isLoading) return <Panel><div className="text-center py-12 text-gray-500">Caricamento recensioni...</div></Panel>;
+
+    return (
+        <Panel>
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                    <span className="px-2 py-1 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600">
+                        ⭐ {recensioni.length} recensioni
+                    </span>
+                    <span className="text-xs text-gray-500">
+                        Gestisci le recensioni dei clienti
+                    </span>
+                </div>
+                <button 
+                    onClick={() => setShowForm(!showForm)} 
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                >
+                    {showForm ? '✕ Chiudi' : '+ Nuova Recensione'}
+                </button>
+            </div>
+
+            {/* Tabella recensioni */}
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead className="border-b border-red-900/30">
+                        <tr className="text-left text-gray-400">
+                            <th className="pb-3 font-medium w-16">ID</th>
+                            <th className="pb-3 font-medium w-48">Cliente</th>
+                            <th className="pb-3 font-medium w-48">Qualifica</th>
+                            <th className="pb-3 font-medium">Recensione</th>
+                            <th className="pb-3 font-medium w-24">Azioni</th>
+                         </tr>
+                    </thead>
+                    <tbody>
+                        {recensioni.map((recensione) => (
+                            <tr key={recensione.id} className="border-b border-red-900/20 hover:bg-red-600/5">
+                                <td className="py-3 text-gray-400 align-top">{recensione.id}</td>
+                                <td className="py-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg">👤</span>
+                                        <span className="text-white font-medium">{recensione.nome || '—'}</span>
+                                    </div>
+                                </td>
+                                <td className="py-3">
+                                    {recensione.qualifica ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600">
+                                            💼 {recensione.qualifica}
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-500 text-xs">—</span>
+                                    )}
+                                </td>
+                                <td className="py-3">
+                                    <div className="text-gray-300 max-w-md">
+                                        "{truncateText(recensione.recensione, 80)}"
+                                    </div>
+                                </td>
+                                <td className="py-3">
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={() => handleEdit(recensione)} 
+                                            className="text-red-600 hover:text-red-500 p-1" 
+                                            title="Modifica"
+                                        >
+                                            ✎
+                                        </button>
+                                        <button 
+                                            onClick={() => deleteRecensione(recensione.id, recensione.nome)} 
+                                            className="text-red-600 hover:text-red-500 p-1" 
+                                            title="Elimina"
+                                        >
+                                            🗑
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {recensioni.length === 0 && (
+                            <tr>
+                                <td colSpan="5" className="py-8 text-center text-gray-500">
+                                    Nessuna recensione presente
+                                    <div className="text-xs mt-1 text-gray-600">
+                                        Clicca "+ Nuova Recensione" per aggiungerne una
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Form di modifica/creazione */}
+            {showForm && (
+                <div className="mt-6 pt-6 border-t border-red-900/30">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-white font-medium flex items-center gap-2">
+                            <span>⭐</span>
+                            {editingRecensione ? '✎ Modifica Recensione' : '➕ Nuova Recensione'}
+                        </h3>
+                        <button onClick={resetForm} className="text-gray-400 hover:text-white">✕</button>
+                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-1">
+                                Nome Cliente *
+                            </label>
+                            <input 
+                                name="nome" 
+                                value={formData.nome} 
+                                onChange={handleInputChange} 
+                                placeholder="es: Mario Rossi" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                required 
+                                autoFocus
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-1">
+                                Qualifica / Ruolo
+                                <span className="text-xs text-gray-500 ml-2">(opzionale - es: CEO, Fondatore, Designer)</span>
+                            </label>
+                            <input 
+                                name="qualifica" 
+                                value={formData.qualifica || ''} 
+                                onChange={handleInputChange} 
+                                placeholder="es: CEO di Azienda S.r.l." 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm text-gray-400 mb-1">
+                                Recensione *
+                            </label>
+                            <textarea 
+                                name="recensione" 
+                                value={formData.recensione || ''} 
+                                onChange={handleInputChange} 
+                                placeholder="Scrivi qui la recensione del cliente..." 
+                                rows="4"
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white resize-y" 
+                                required
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                💡 Consiglio: mantieni la recensione concisa ma significativa
+                            </p>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                {editingRecensione ? 'Aggiorna Recensione' : 'Crea Recensione'}
+                            </button>
+                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                                Annulla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+        </Panel>
+    );
+}
+
+// ============================================
 // GESTIONE CATEGORIE
 // ============================================
 function GestioneCategorie({ showAlert }) {
@@ -1125,25 +1454,31 @@ export default function AdminDashboard() {
     const [page, setPage] = useState('Gestione Progetti');
     const { alert, showAlert, hideAlert } = useAlert();
 
+    // Sostituisci la sezione pages con:
     const pages = {
         'Gestione Progetti': <GestioneProgetti showAlert={showAlert} />,
         'Gestione Media': <GestioneMedia showAlert={showAlert} />,
         'Gestione Homepage': <GestioneHomepage showAlert={showAlert} />,
-        'Gestione Categorie': <GestioneCategorie showAlert={showAlert} />
+        'Gestione Categorie': <GestioneCategorie showAlert={showAlert} />,
+        'Gestione Recensioni': <GestioneRecensioni showAlert={showAlert} />
     };
 
+    // Sostituisci la sezione buttons con:
     const buttons = {
         'Gestione Progetti': () => {},
         'Gestione Media': () => {},
         'Gestione Homepage': () => {},
-        'Gestione Categorie': () => {}
+        'Gestione Categorie': () => {},
+        'Gestione Recensioni': () => {}
     };
 
+    // Sostituisci la sezione pageIcon con:
     const pageIcon = { 
         'Gestione Progetti': '📊', 
         'Gestione Media': '🎬', 
         'Gestione Homepage': '🏠',
-        'Gestione Categorie': '🏷️'
+        'Gestione Categorie': '🏷️',
+        'Gestione Recensioni': '⭐'
     };
 
     return (

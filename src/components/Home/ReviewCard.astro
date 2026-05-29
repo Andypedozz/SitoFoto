@@ -1,20 +1,21 @@
-<div class="testi-card reveal">
+---
+const { review, delay } = Astro.props
+---
+<div class=`testi-card reveal delay-${delay}`>
     <div class="testi-quote">"</div>
     <p class="testi-text">
-        UG Action Media ha trasformato il nostro evento in un capolavoro visivo.
-        La capacità di catturare l'emozione dello sport in ogni scatto è
-        semplicemente straordinaria.
+        {review.recensione}
     </p>
     <div class="testi-author">
-        <div class="testi-avatar">
+        <!-- <div class="testi-avatar">
             <img
                 src="https://randomuser.me/api/portraits/men/32.jpg"
                 alt="Marco R."
             />
-        </div>
+        </div> -->
         <div>
-            <span class="testi-name">Marco Rossi</span>
-            <span class="testi-role">Direttore Sportivo, ASD Milano</span>
+            <span class="testi-name">{review.nome}</span>
+            <span class="testi-role">{review.qualifica}</span>
         </div>
     </div>
 </div>

@@ -11,6 +11,7 @@ import CTA from "../components/Home/CTA.astro";
 import Featured from "../components/Home/Featured.astro";
 import LogoBanner from "../components/Home/LogoBanner.astro";
 import "../styles/style.css"
+import ReviewCard from "../components/Home/ReviewCard.astro";
 
 const headerLinks = [
   { name: "Portfolio", href: "#portfolio" },
@@ -24,6 +25,8 @@ const res = await fetch(new URL("/api/projects/homepage", Astro.request.url));
 const homeProjects = await res.json();
 const res2 = await fetch(new URL("/api/categories", Astro.request.url));
 const categories = await res2.json();
+const res3 = await fetch(new URL("/api/feedbacks", Astro.request.url));
+const feedbacks = await res3.json();
 
 const bannerLogos: any = [];
 ---
@@ -39,74 +42,17 @@ const bannerLogos: any = [];
   <Process />
 
   <!-- TESTIMONIALS -->
-  <section class="testimonials" id="testimonials">
+  {feedbacks.length > 0 && <section class="testimonials" id="testimonials">
     <div class="reveal">
       <div class="section-label">Cosa dicono di noi</div>
       <h2 class="section-title">Clienti & Feedback</h2>
     </div>
     <div class="testi-grid">
-      <div class="testi-card reveal">
-        <div class="testi-quote">"</div>
-        <p class="testi-text">
-          UG Action Media ha trasformato il nostro evento in un capolavoro
-          visivo. La capacità di catturare l'emozione dello sport in ogni scatto
-          è semplicemente straordinaria.
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">
-            <img
-              src="https://randomuser.me/api/portraits/men/32.jpg"
-              alt="Marco R."
-            />
-          </div>
-          <div>
-            <span class="testi-name">Marco Rossi</span>
-            <span class="testi-role">Direttore Sportivo, ASD Milano</span>
-          </div>
-        </div>
-      </div>
-      <div class="testi-card reveal reveal-delay-1">
-        <div class="testi-quote">"</div>
-        <p class="testi-text">
-          Professionisti veri. Sanno leggere il momento prima ancora che accada.
-          Il materiale consegnato ha superato ogni aspettativa per la nostra
-          campagna brand.
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">
-            <img
-              src="https://randomuser.me/api/portraits/women/44.jpg"
-              alt="Sara V."
-            />
-          </div>
-          <div>
-            <span class="testi-name">Sara Ventura</span>
-            <span class="testi-role">Marketing Manager, NikeItaly</span>
-          </div>
-        </div>
-      </div>
-      <div class="testi-card reveal reveal-delay-2">
-        <div class="testi-quote">"</div>
-        <p class="testi-text">
-          Collaboriamo con UG Action da tre anni. Ogni campionato, ogni evento.
-          La qualità è costante e la passione è autentica. Non potremmo
-          immaginare altri al loro posto.
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">
-            <img
-              src="https://randomuser.me/api/portraits/men/76.jpg"
-              alt="Luca T."
-            />
-          </div>
-          <div>
-            <span class="testi-name">Luca Trabucchi</span>
-            <span class="testi-role">Presidente, FC Roma Academy</span>
-          </div>
-        </div>
-      </div>
+      {feedbacks.map((f: any) => (
+        <ReviewCard review={f}/>
+      ))}
     </div>
-  </section>
+  </section>}
 
   <CTA />
   <Footer />
