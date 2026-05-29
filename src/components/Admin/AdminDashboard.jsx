@@ -37,12 +37,12 @@ function CustomAlert({ message, type, onClose }) {
     };
 
     return (
-        <div className="fixed top-20 right-4 z-50 animate-slide-in">
-            <div className={`${alertStyles[type]} border rounded-lg p-4 min-w-75 max-w-md shadow-lg backdrop-blur-sm`}>
-                <div className="flex items-start gap-3">
-                    <div className="text-xl">{icons[type]}</div>
+        <div className="fixed top-16 left-4 right-4 md:top-20 md:right-4 md:left-auto z-50 animate-slide-in">
+            <div className={`${alertStyles[type]} border rounded-lg p-3 md:p-4 shadow-lg backdrop-blur-sm w-full md:w-auto md:min-w-75 md:max-w-md`}>
+                <div className="flex items-start gap-2 md:gap-3">
+                    <div className="text-lg md:text-xl">{icons[type]}</div>
                     <div className="flex-1">
-                        <p className="text-sm font-medium">{message}</p>
+                        <p className="text-xs md:text-sm font-medium">{message}</p>
                     </div>
                     <button 
                         onClick={onClose}
@@ -467,37 +467,72 @@ function useCategorieManagement(showAlert) {
 
 function Panel({ children, className = '' }) {
     return (
-        <div className={`bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg p-6 ${className}`}>
+        <div className={`bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg p-4 md:p-6 ${className}`}>
             {children}
         </div>
     );
 }
 
 function Sidebar({ buttons, setPage, currentPage }) {
+    const [isOpen, setIsOpen] = useState(false);
+
     return (
-        <aside className="w-64 h-screen bg-black border-r border-red-900/30 fixed left-0 top-0 flex flex-col">
-            <div className="p-6 border-b border-red-900/30">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                    <span className="text-white font-bold">UG Admin</span>
+        <>
+            {/* Mobile menu button */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="md:hidden fixed top-4 left-4 z-50 p-2 bg-black border border-red-900/30 rounded-lg text-white"
+            >
+                {isOpen ? '✕' : '☰'}
+            </button>
+
+            {/* Overlay */}
+            {isOpen && (
+                <div 
+                    className="md:hidden fixed inset-0 bg-black/50 z-40"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`
+                fixed left-0 top-0 h-full bg-black border-r border-red-900/30 flex flex-col z-40
+                transition-transform duration-300 ease-in-out
+                w-64
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+                md:translate-x-0
+            `}>
+                <div className="p-4 md:p-6 border-b border-red-900/30">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                        <span className="text-white font-bold text-sm md:text-base">UG Admin</span>
+                    </div>
                 </div>
-            </div>
-            <nav className="flex-1 py-4 px-3">
-                {Object.entries(buttons).map(([label, onClick]) => (
-                    <button
-                        key={label}
-                        onClick={() => { onClick(); setPage(label); }}
-                        className={`w-full text-left px-3 py-2 rounded-lg mb-1 transition-colors ${currentPage === label ? 'bg-red-600/20 text-red-600 border border-red-600/30' : 'text-gray-400 hover:text-white hover:bg-red-600/10'}`}
-                    >
-                        {label}
-                    </button>
-                ))}
-                <div className="mt-4 pt-4 border-t border-red-900/30">
-                    <button onClick={() => window.location.href = '/'} className="w-full text-left px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-red-600/10">← Torna alla home</button>
-                    <button onClick={() => { fetch('api/logout', { method: 'POST' }).then(() => window.location.href = '/login'); }} className="w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-600/10 mt-1">Disconnetti</button>
-                </div>
-            </nav>
-        </aside>
+                <nav className="flex-1 py-2 md:py-4 px-2 md:px-3 overflow-y-auto">
+                    {Object.entries(buttons).map(([label, onClick]) => (
+                        <button
+                            key={label}
+                            onClick={() => { 
+                                onClick(); 
+                                setPage(label);
+                                setIsOpen(false);
+                            }}
+                            className={`w-full text-left px-2 md:px-3 py-2 rounded-lg mb-1 transition-colors text-sm md:text-base ${
+                                currentPage === label 
+                                    ? 'bg-red-600/20 text-red-600 border border-red-600/30' 
+                                    : 'text-gray-400 hover:text-white hover:bg-red-600/10'
+                            }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                    <div className="mt-4 pt-4 border-t border-red-900/30">
+                        <button onClick={() => window.location.href = '/'} className="w-full text-left px-2 md:px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-red-600/10 text-sm md:text-base">← Torna alla home</button>
+                        <button onClick={() => { fetch('api/logout', { method: 'POST' }).then(() => window.location.href = '/login'); }} className="w-full text-left px-2 md:px-3 py-2 rounded-lg text-red-600 hover:bg-red-600/10 mt-1 text-sm md:text-base">Disconnetti</button>
+                    </div>
+                </nav>
+            </aside>
+        </>
     );
 }
 
@@ -528,36 +563,36 @@ function GestioneProgetti({ showAlert }) {
 
     return (
         <Panel>
-            <div className="flex justify-between items-center mb-6">
-                <span className="px-2 py-1 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600">{progetti.length} progetti</span>
-                <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                <span className="px-2 py-1 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600 self-start sm:self-auto">{progetti.length} progetti</span>
+                <button onClick={() => setShowForm(!showForm)} className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
                     {showForm ? '✕ Chiudi' : '+ Nuovo Progetto'}
                 </button>
             </div>
 
-            {/* Tabella progetti */}
+            {/* Tabella progetti - scroll orizzontale su mobile */}
             <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs md:text-sm">
                     <thead className="border-b border-red-900/30">
                         <tr className="text-left text-gray-400">
-                            <th className="pb-3 font-medium">ID</th>
-                            <th className="pb-3 font-medium">Nome</th>
-                            <th className="pb-3 font-medium">Slug</th>
-                            <th className="pb-3 font-medium">Categoria</th>
-                            <th className="pb-3 font-medium">Copertina</th>
-                            <th className="pb-3 font-medium">Azioni</th>
+                            <th className="pb-2 md:pb-3 font-medium">ID</th>
+                            <th className="pb-2 md:pb-3 font-medium">Nome</th>
+                            <th className="pb-2 md:pb-3 font-medium hidden sm:table-cell">Slug</th>
+                            <th className="pb-2 md:pb-3 font-medium">Categoria</th>
+                            <th className="pb-2 md:pb-3 font-medium hidden md:table-cell">Copertina</th>
+                            <th className="pb-2 md:pb-3 font-medium">Azioni</th>
                         </tr>
                     </thead>
                     <tbody>
                         {progetti.map((progetto) => (
                             <tr key={progetto.id} className="border-b border-red-900/20 hover:bg-red-600/5">
-                                <td className="py-3 text-gray-400">{progetto.id}</td>
-                                <td className="py-3"><span className="text-white font-medium">{progetto.nome}</span></td>
-                                <td className="py-3"><span className="text-gray-400 text-xs">/{progetto.slug}</span></td>
-                                <td className="py-3">{getCategoriaNome(progetto.idCategoria)}</td>
-                                <td className="py-3 text-gray-500">{progetto.copertina || '—'}</td>
-                                <td className="py-3">
-                                    <button onClick={() => handleEdit(progetto)} className="text-red-600 hover:text-red-500 mr-3" title="Modifica">✎</button>
+                                <td className="py-2 md:py-3 text-gray-400">{progetto.id}</td>
+                                <td className="py-2 md:py-3"><span className="text-white font-medium">{progetto.nome}</span></td>
+                                <td className="py-2 md:py-3 hidden sm:table-cell"><span className="text-gray-400 text-xs">/{progetto.slug}</span></td>
+                                <td className="py-2 md:py-3">{getCategoriaNome(progetto.idCategoria)}</td>
+                                <td className="py-2 md:py-3 hidden md:table-cell text-gray-500">{progetto.copertina || '—'}</td>
+                                <td className="py-2 md:py-3 whitespace-nowrap">
+                                    <button onClick={() => handleEdit(progetto)} className="text-red-600 hover:text-red-500 mr-2 md:mr-3" title="Modifica">✎</button>
                                     <button onClick={() => deleteProgetto(progetto.id)} className="text-red-600 hover:text-red-500" title="Elimina">🗑</button>
                                 </td>
                             </tr>
@@ -575,7 +610,7 @@ function GestioneProgetti({ showAlert }) {
             {showForm && (
                 <div className="mt-6 pt-6 border-t border-red-900/30">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-white font-medium">{editingProject ? '✎ Modifica Progetto' : '➕ Nuovo Progetto'}</h3>
+                        <h3 className="text-white font-medium text-sm md:text-base">{editingProject ? '✎ Modifica Progetto' : '➕ Nuovo Progetto'}</h3>
                         <button onClick={resetForm} className="text-gray-400 hover:text-white">✕</button>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -586,7 +621,7 @@ function GestioneProgetti({ showAlert }) {
                                 value={formData.nome} 
                                 onChange={handleInputChange} 
                                 placeholder="Nome progetto" 
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white text-sm md:text-base" 
                                 required 
                             />
                         </div>
@@ -597,7 +632,7 @@ function GestioneProgetti({ showAlert }) {
                                 value={formData.slug} 
                                 onChange={handleInputChange} 
                                 placeholder="slug-del-progetto" 
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white text-sm md:text-base" 
                                 required 
                             />
                         </div>
@@ -607,7 +642,7 @@ function GestioneProgetti({ showAlert }) {
                                 name="idCategoria" 
                                 value={formData.idCategoria} 
                                 onChange={handleInputChange}
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white text-sm md:text-base"
                             >
                                 <option value="">— Nessuna categoria —</option>
                                 {categorie.map(categoria => (
@@ -628,7 +663,7 @@ function GestioneProgetti({ showAlert }) {
                                 onChange={handleInputChange} 
                                 placeholder="Descrizione del progetto" 
                                 rows="3" 
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white resize-y" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white resize-y text-sm md:text-base" 
                             />
                         </div>
                         <div>
@@ -638,14 +673,14 @@ function GestioneProgetti({ showAlert }) {
                                 value={formData.copertina} 
                                 onChange={handleInputChange} 
                                 placeholder="URL copertina o nome file" 
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white text-sm md:text-base" 
                             />
                         </div>
-                        <div className="flex gap-3 pt-2">
-                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm md:text-base">
                                 {editingProject ? 'Aggiorna' : 'Crea'}
                             </button>
-                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm md:text-base">
                                 Annulla
                             </button>
                         </div>
@@ -828,8 +863,8 @@ function GestioneRecensioni({ showAlert }) {
 
     return (
         <Panel>
-            <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                <div className="flex flex-wrap items-center gap-3">
                     <span className="px-2 py-1 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600">
                         ⭐ {recensioni.length} recensioni
                     </span>
@@ -839,35 +874,35 @@ function GestioneRecensioni({ showAlert }) {
                 </div>
                 <button 
                     onClick={() => setShowForm(!showForm)} 
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                    className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
                 >
                     {showForm ? '✕ Chiudi' : '+ Nuova Recensione'}
                 </button>
             </div>
 
-            {/* Tabella recensioni */}
+            {/* Tabella recensioni - scroll orizzontale su mobile */}
             <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs md:text-sm">
                     <thead className="border-b border-red-900/30">
                         <tr className="text-left text-gray-400">
-                            <th className="pb-3 font-medium w-16">ID</th>
-                            <th className="pb-3 font-medium w-48">Cliente</th>
-                            <th className="pb-3 font-medium w-48">Qualifica</th>
-                            <th className="pb-3 font-medium">Recensione</th>
-                            <th className="pb-3 font-medium w-24">Azioni</th>
-                         </tr>
+                            <th className="pb-2 md:pb-3 font-medium w-12 md:w-16">ID</th>
+                            <th className="pb-2 md:pb-3 font-medium w-32 md:w-48">Cliente</th>
+                            <th className="pb-2 md:pb-3 font-medium w-32 md:w-48 hidden sm:table-cell">Qualifica</th>
+                            <th className="pb-2 md:pb-3 font-medium">Recensione</th>
+                            <th className="pb-2 md:pb-3 font-medium w-16 md:w-24">Azioni</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {recensioni.map((recensione) => (
                             <tr key={recensione.id} className="border-b border-red-900/20 hover:bg-red-600/5">
-                                <td className="py-3 text-gray-400 align-top">{recensione.id}</td>
-                                <td className="py-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-lg">👤</span>
-                                        <span className="text-white font-medium">{recensione.nome || '—'}</span>
+                                <td className="py-2 md:py-3 text-gray-400 align-top">{recensione.id}</td>
+                                <td className="py-2 md:py-3">
+                                    <div className="flex items-center gap-1 md:gap-2">
+                                        <span className="text-base md:text-lg">👤</span>
+                                        <span className="text-white font-medium text-xs md:text-sm">{recensione.nome || '—'}</span>
                                     </div>
                                 </td>
-                                <td className="py-3">
+                                <td className="py-2 md:py-3 hidden sm:table-cell">
                                     {recensione.qualifica ? (
                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600">
                                             💼 {recensione.qualifica}
@@ -876,13 +911,13 @@ function GestioneRecensioni({ showAlert }) {
                                         <span className="text-gray-500 text-xs">—</span>
                                     )}
                                 </td>
-                                <td className="py-3">
-                                    <div className="text-gray-300 max-w-md">
-                                        "{truncateText(recensione.recensione, 80)}"
+                                <td className="py-2 md:py-3">
+                                    <div className="text-gray-300 max-w-md text-xs md:text-sm">
+                                        "{truncateText(recensione.recensione, 60)}"
                                     </div>
                                 </td>
-                                <td className="py-3">
-                                    <div className="flex gap-2">
+                                <td className="py-2 md:py-3">
+                                    <div className="flex gap-1 md:gap-2">
                                         <button 
                                             onClick={() => handleEdit(recensione)} 
                                             className="text-red-600 hover:text-red-500 p-1" 
@@ -919,7 +954,7 @@ function GestioneRecensioni({ showAlert }) {
             {showForm && (
                 <div className="mt-6 pt-6 border-t border-red-900/30">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-white font-medium flex items-center gap-2">
+                        <h3 className="text-white font-medium text-sm md:text-base flex items-center gap-2">
                             <span>⭐</span>
                             {editingRecensione ? '✎ Modifica Recensione' : '➕ Nuova Recensione'}
                         </h3>
@@ -935,7 +970,7 @@ function GestioneRecensioni({ showAlert }) {
                                 value={formData.nome} 
                                 onChange={handleInputChange} 
                                 placeholder="es: Mario Rossi" 
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white text-sm md:text-base" 
                                 required 
                                 autoFocus
                             />
@@ -950,7 +985,7 @@ function GestioneRecensioni({ showAlert }) {
                                 value={formData.qualifica || ''} 
                                 onChange={handleInputChange} 
                                 placeholder="es: CEO di Azienda S.r.l." 
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white text-sm md:text-base" 
                             />
                         </div>
                         <div>
@@ -963,18 +998,18 @@ function GestioneRecensioni({ showAlert }) {
                                 onChange={handleInputChange} 
                                 placeholder="Scrivi qui la recensione del cliente..." 
                                 rows="4"
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white resize-y" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white resize-y text-sm md:text-base" 
                                 required
                             />
                             <p className="text-xs text-gray-500 mt-1">
                                 💡 Consiglio: mantieni la recensione concisa ma significativa
                             </p>
                         </div>
-                        <div className="flex gap-3 pt-2">
-                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm md:text-base">
                                 {editingRecensione ? 'Aggiorna Recensione' : 'Crea Recensione'}
                             </button>
-                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm md:text-base">
                                 Annulla
                             </button>
                         </div>
@@ -999,8 +1034,8 @@ function GestioneCategorie({ showAlert }) {
 
     return (
         <Panel>
-            <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                <div className="flex flex-wrap items-center gap-3">
                     <span className="px-2 py-1 bg-red-600/10 border border-red-600/30 rounded text-xs text-red-600">
                         {categorie.length} categorie
                     </span>
@@ -1008,35 +1043,35 @@ function GestioneCategorie({ showAlert }) {
                         🏷️ Gestisci le categorie per i tuoi progetti
                     </span>
                 </div>
-                <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                <button onClick={() => setShowForm(!showForm)} className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
                     {showForm ? '✕ Chiudi' : '+ Nuova Categoria'}
                 </button>
             </div>
 
             {/* Tabella categorie */}
             <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs md:text-sm">
                     <thead className="border-b border-red-900/30">
                         <tr className="text-left text-gray-400">
-                            <th className="pb-3 font-medium w-16">ID</th>
-                            <th className="pb-3 font-medium">Nome</th>
-                            <th className="pb-3 font-medium w-32">Azioni</th>
+                            <th className="pb-2 md:pb-3 font-medium w-12 md:w-16">ID</th>
+                            <th className="pb-2 md:pb-3 font-medium">Nome</th>
+                            <th className="pb-2 md:pb-3 font-medium w-20 md:w-32">Azioni</th>
                         </tr>
                     </thead>
                     <tbody>
                         {categorie.map((categoria) => (
                             <tr key={categoria.id} className="border-b border-red-900/20 hover:bg-red-600/5">
-                                <td className="py-3 text-gray-400">{categoria.id}</td>
-                                <td className="py-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-lg">🏷️</span>
-                                        <span className="text-white font-medium">{categoria.nome}</span>
+                                <td className="py-2 md:py-3 text-gray-400">{categoria.id}</td>
+                                <td className="py-2 md:py-3">
+                                    <div className="flex items-center gap-1 md:gap-2">
+                                        <span className="text-base md:text-lg">🏷️</span>
+                                        <span className="text-white font-medium text-xs md:text-sm">{categoria.nome}</span>
                                     </div>
                                 </td>
-                                <td className="py-3">
+                                <td className="py-2 md:py-3 whitespace-nowrap">
                                     <button 
                                         onClick={() => handleEdit(categoria)} 
-                                        className="text-red-600 hover:text-red-500 mr-3" 
+                                        className="text-red-600 hover:text-red-500 mr-2 md:mr-3" 
                                         title="Modifica"
                                     >
                                         ✎
@@ -1069,7 +1104,7 @@ function GestioneCategorie({ showAlert }) {
             {showForm && (
                 <div className="mt-6 pt-6 border-t border-red-900/30">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-white font-medium flex items-center gap-2">
+                        <h3 className="text-white font-medium text-sm md:text-base flex items-center gap-2">
                             <span>🏷️</span>
                             {editingCategoria ? '✎ Modifica Categoria' : '➕ Nuova Categoria'}
                         </h3>
@@ -1088,16 +1123,16 @@ function GestioneCategorie({ showAlert }) {
                                 value={formData.nome} 
                                 onChange={handleInputChange} 
                                 placeholder="Inserisci il nome della categoria" 
-                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white" 
+                                className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white text-sm md:text-base" 
                                 required 
                                 autoFocus
                             />
                         </div>
-                        <div className="flex gap-3 pt-2">
-                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm md:text-base">
                                 {editingCategoria ? 'Aggiorna' : 'Crea'}
                             </button>
-                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm md:text-base">
                                 Annulla
                             </button>
                         </div>
@@ -1208,13 +1243,13 @@ function GestioneMedia({ showAlert }) {
             <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" onClick={onClose}>
                 <div className="max-w-4xl max-h-full" onClick={(e) => e.stopPropagation()}>
                     <div className="relative">
-                        <button onClick={onClose} className="absolute -top-10 right-0 text-white text-2xl hover:text-red-600">✕</button>
+                        <button onClick={onClose} className="absolute -top-8 md:-top-10 right-0 text-white text-xl md:text-2xl hover:text-red-600">✕</button>
                         {item.tipo === 'video' ? (
-                            <video src={item.secureUrl} controls autoPlay className="max-w-full max-h-[80vh] rounded-lg" />
+                            <video src={item.secureUrl} controls autoPlay className="max-w-full max-h-[70vh] md:max-h-[80vh] rounded-lg" />
                         ) : (
-                            <img src={item.secureUrl} alt={item.nome} className="max-w-full max-h-[80vh] rounded-lg" />
+                            <img src={item.secureUrl} alt={item.nome} className="max-w-full max-h-[70vh] md:max-h-[80vh] rounded-lg" />
                         )}
-                        <div className="mt-3 text-center text-white text-sm">
+                        <div className="mt-3 text-center text-white text-xs md:text-sm">
                             <p className="font-medium">{item.nome}</p>
                             <p className="text-gray-400 text-xs mt-1">
                                 Tipo: {item.tipo === 'video' ? 'Video' : 'Immagine'} | 
@@ -1246,7 +1281,7 @@ function GestioneMedia({ showAlert }) {
                     <select 
                         value={selectedProject} 
                         onChange={(e) => setSelectedProject(e.target.value)} 
-                        className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white mb-3"
+                        className="w-full px-3 py-2 bg-[rgb(19,19,19)] border border-red-900/30 rounded-lg text-white mb-3 text-sm md:text-base"
                     >
                         <option value="">Seleziona progetto</option>
                         {progetti.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
@@ -1257,31 +1292,31 @@ function GestioneMedia({ showAlert }) {
                         accept="image/*,video/*" 
                         onChange={(e) => handleUpload(e.target.files)} 
                         disabled={!selectedProject}
-                        className="w-full text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-red-600 file:text-white file:hover:bg-red-700 file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
+                        className="w-full text-xs md:text-sm text-gray-400 file:mr-3 file:py-1 md:file:py-2 file:px-2 md:file:px-4 file:rounded-lg file:border-0 file:bg-red-600 file:text-white file:hover:bg-red-700 file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
                     />
-                    <p className="text-xs text-gray-600 mt-2">
+                    <p className="text-[10px] md:text-xs text-gray-600 mt-2">
                         📷 Clicca sulla card per visualizzare l'immagine/video
                         <br />
                         💡 Massimo 20MB per immagini, 100MB per video
                     </p>
                 </div>
 
-                {/* Griglia media */}
+                {/* Griglia media - responsive grid */}
                 {Object.keys(mediaByProject).length > 0 ? (
                     Object.entries(mediaByProject).map(([pid, group]) => (
                         <div key={pid} className="bg-black/30 border border-red-900/30 rounded-lg p-3">
-                            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-red-900/30">
+                            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-red-900/30 flex-wrap">
                                 <span className="text-sm text-red-600">📁</span>
-                                <span className="text-white font-medium">{group.progetto?.nome || 'Sconosciuto'}</span>
+                                <span className="text-white font-medium text-sm">{group.progetto?.nome || 'Sconosciuto'}</span>
                                 <span className="text-xs text-gray-500">{group.items.length} file</span>
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
                                 {group.items.map(item => <MediaCard key={item.id} item={item} progetto={group.progetto} />)}
                             </div>
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 text-sm">
                         {media.length === 0 ? 'Nessun media caricato' : 'Caricamento in corso...'}
                     </div>
                 )}
@@ -1364,13 +1399,13 @@ function GestioneHomepage({ showAlert }) {
 
     return (
         <Panel>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col lg:flex-row gap-6">
                 {/* Progetti disponibili */}
-                <div className="bg-black/30 border border-red-900/30 rounded-lg p-4">
-                    <h3 className="text-white font-medium mb-3">📋 Progetti Disponibili</h3>
+                <div className="flex-1 bg-black/30 border border-red-900/30 rounded-lg p-4">
+                    <h3 className="text-white font-medium mb-3 text-sm md:text-base">📋 Progetti Disponibili</h3>
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                         {availableProjects.map(p => (
-                            <div key={p.id} className="flex justify-between items-center p-2 bg-black rounded border border-red-900/30">
+                            <div key={p.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 p-2 bg-black rounded border border-red-900/30">
                                 <div className="flex-1">
                                     <div className="text-white text-sm font-medium">{p.nome}</div>
                                     {p.descrizione && (
@@ -1379,33 +1414,33 @@ function GestioneHomepage({ showAlert }) {
                                 </div>
                                 <button 
                                     onClick={() => toggleProject(p.id)} 
-                                    className="px-3 py-1 text-sm bg-red-600/20 text-red-600 rounded border border-red-600/30 hover:bg-red-600/30 transition-colors"
+                                    className="w-full sm:w-auto px-3 py-1 text-sm bg-red-600/20 text-red-600 rounded border border-red-600/30 hover:bg-red-600/30 transition-colors"
                                 >
                                     + Seleziona
                                 </button>
                             </div>
                         ))}
                         {availableProjects.length === 0 && (
-                            <div className="text-center py-8 text-gray-500">Tutti i progetti sono in homepage</div>
+                            <div className="text-center py-8 text-gray-500 text-sm">Tutti i progetti sono in homepage</div>
                         )}
                     </div>
                 </div>
 
                 {/* Progetti in homepage */}
-                <div className="bg-black/30 border border-red-900/30 rounded-lg p-4">
-                    <h3 className="text-white font-medium mb-3">🏠 Progetti in Homepage ({selectedIds.length})</h3>
+                <div className="flex-1 bg-black/30 border border-red-900/30 rounded-lg p-4">
+                    <h3 className="text-white font-medium mb-3 text-sm md:text-base">🏠 Progetti in Homepage ({selectedIds.length})</h3>
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                         {selectedProjects.map((p, idx) => (
-                            <div key={p.id} className="flex justify-between items-center p-2 bg-black rounded border border-red-900/30">
-                                <div className="flex-1">
-                                    <span className="text-gray-500 text-xs mr-2">#{idx + 1}</span>
+                            <div key={p.id} className="flex flex-wrap justify-between items-center gap-2 p-2 bg-black rounded border border-red-900/30">
+                                <div className="flex items-center gap-2 flex-1">
+                                    <span className="text-gray-500 text-xs">#{idx + 1}</span>
                                     <span className="text-white text-sm font-medium">{p.nome}</span>
                                 </div>
                                 <div className="flex gap-1">
                                     <button 
                                         onClick={() => moveUp(idx)} 
                                         disabled={idx === 0} 
-                                        className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
                                         title="Sposta su"
                                     >
                                         ↑
@@ -1413,14 +1448,14 @@ function GestioneHomepage({ showAlert }) {
                                     <button 
                                         onClick={() => moveDown(idx)} 
                                         disabled={idx === selectedIds.length - 1} 
-                                        className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
                                         title="Sposta giù"
                                     >
                                         ↓
                                     </button>
                                     <button 
                                         onClick={() => toggleProject(p.id)} 
-                                        className="px-2 py-1 text-red-600 hover:text-red-500 transition-colors"
+                                        className="px-2 py-1 text-red-600 hover:text-red-500 transition-colors text-sm"
                                         title="Rimuovi"
                                     >
                                         ✕
@@ -1429,16 +1464,16 @@ function GestioneHomepage({ showAlert }) {
                             </div>
                         ))}
                         {selectedIds.length === 0 && (
-                            <div className="text-center py-8 text-gray-500">Nessun progetto selezionato per la homepage</div>
+                            <div className="text-center py-8 text-gray-500 text-sm">Nessun progetto selezionato per la homepage</div>
                         )}
                     </div>
                 </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-red-900/30 flex justify-between items-center">
+            <div className="mt-6 pt-4 border-t border-red-900/30">
                 <button 
                     onClick={saveHomepage} 
-                    className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    className="w-full sm:w-auto px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"
                 >
                     💾 Salva configurazione homepage
                 </button>
@@ -1482,16 +1517,16 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-[rgb(19,19,19)] text-white flex">
+        <div className="min-h-screen bg-[rgb(19,19,19)] text-white">
             <CustomAlert 
                 message={alert.message} 
                 type={alert.type} 
                 onClose={hideAlert} 
             />
             <Sidebar buttons={buttons} setPage={setPage} currentPage={page} />
-            <main className="flex-1 ml-64 min-h-screen p-6">
-                <div className="mb-6">
-                    <h1 className="text-xl font-bold flex items-center gap-2">
+            <main className="md:ml-64 min-h-screen p-3 md:p-6">
+                <div className="mb-4 md:mb-6 pt-12 md:pt-0">
+                    <h1 className="text-lg md:text-xl font-bold flex items-center gap-2">
                         <span>{pageIcon[page]}</span> {page}
                     </h1>
                 </div>
