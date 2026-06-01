@@ -1,4 +1,5 @@
 ---
+// Components
 import About from "../components/Home/About.astro";
 import Header from "../components/Home/Header.astro";
 import Portfolio from "../components/Home/Portfolio.astro";
@@ -10,8 +11,10 @@ import Process from "../components/Home/Process.astro";
 import CTA from "../components/Home/CTA.astro";
 import Featured from "../components/Home/Featured.astro";
 import LogoBanner from "../components/Home/LogoBanner.astro";
-import "../styles/style.css"
 import ReviewCard from "../components/Home/ReviewCard.astro";
+
+// Styles
+import "../styles/style.css"
 
 const headerLinks = [
   { name: "Portfolio", href: "#portfolio" },
@@ -21,12 +24,9 @@ const headerLinks = [
   { name: "Contatti", href: "#contact" },
 ]
 
-const res = await fetch(new URL("/api/projects/homepage", Astro.request.url));
-const homeProjects = await res.json();
-const res2 = await fetch(new URL("/api/categories", Astro.request.url));
-const categories = await res2.json();
-const res3 = await fetch(new URL("/api/feedbacks", Astro.request.url));
-const feedbacks = await res3.json();
+const homeProjects = await fetch(new URL("/api/projects/homepage", Astro.request.url)).then(res => res.json());
+const categories = await fetch(new URL("/api/categories", Astro.request.url)).then(res => res.json());
+const feedbacks = await fetch(new URL("/api/feedbacks", Astro.request.url)).then(res => res.json());
 
 const bannerLogos: any = [];
 ---

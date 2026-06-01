@@ -2,17 +2,7 @@
 import ProjectTemplate from "../components/ProjectTemplate/ProjectTemplate.astro";
 
 const { projectSlug } = Astro.params;
-
-let project = null;
-
-if (projectSlug) {
-  const res = await fetch(
-    new URL("/api/projects?slug=" + projectSlug, Astro.request.url)
-  );
-
-  project = await res.json();
-}
-
+const project = (projectSlug)? await fetch(new URL("/api/projects?slug=" + projectSlug, Astro.request.url)).then(res => res.json()) : null
 ---
-{project && <ProjectTemplate project={project} />}
 
+{project && <ProjectTemplate project={project} />}
