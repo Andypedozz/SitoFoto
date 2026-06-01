@@ -3,6 +3,155 @@ import ProjectCard from "./ProjectCard.astro";
 
 const { projects, categories } = Astro.props;
 ---
+
+<style>
+    /* ── PORTFOLIO GALLERY ── */
+    .portfolio {
+        background: var(--black);
+        padding-bottom: 5rem;
+        padding-left: 0;
+        padding-right: 0;
+        overflow: hidden;
+    }
+
+    .portfolio-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 3rem;
+        padding: 0 5vw;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+
+    .portfolio > .reveal {
+        padding: 0 5vw;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 0.2rem;
+    }
+
+    .filter-tab {
+        font-size: 0.72rem;
+        font-weight: 400;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--white-dim);
+        padding: 0.5rem 1.2rem;
+        border: 1px solid transparent;
+        background: none;
+        cursor: pointer;
+        transition: all 0.25s;
+    }
+
+    .filter-tab.active,
+    .filter-tab:hover {
+        color: var(--white);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .filter-tab.active {
+        border-color: var(--red);
+        color: var(--red);
+    }
+
+    /* scroll controls row */
+    .portfolio-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.6rem;
+        padding: 0 5vw;
+        margin-bottom: 1.8rem;
+    }
+
+    .portfolio-progress-wrap {
+        flex: 1;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .portfolio-progress-bar {
+        height: 100%;
+        background: var(--red);
+        width: 30%;
+        transition: width 0.25s ease;
+        transform-origin: left;
+    }
+
+    .scroll-btn {
+        width: 44px;
+        height: 44px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: none;
+        color: var(--white-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s;
+        flex-shrink: 0;
+    }
+
+    .scroll-btn:hover {
+        border-color: var(--red);
+        color: var(--red);
+    }
+
+    .scroll-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* the scrollable track */
+    .gallery-track-wrap {
+        position: relative;
+    }
+
+    .gallery-track-wrap::before,
+    .gallery-track-wrap::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 8vw;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .gallery-track-wrap::before {
+        left: 0;
+        background: linear-gradient(to right, var(--black), transparent);
+    }
+
+    .gallery-track-wrap::after {
+        right: 0;
+        background: linear-gradient(to left, var(--black), transparent);
+    }
+
+    .gallery-track {
+        display: flex;
+        gap: 3px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        padding: 0 5vw 1.5rem;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        cursor: grab;
+    }
+
+    .gallery-track:active {
+        cursor: grabbing;
+    }
+
+    .gallery-track::-webkit-scrollbar {
+        display: none;
+    }
+</style>
 <section class="portfolio" id="portfolio">
     <div class="portfolio-header reveal">
         <div>

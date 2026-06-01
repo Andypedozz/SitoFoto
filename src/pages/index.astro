@@ -15,6 +15,7 @@ import ReviewCard from "../components/Home/ReviewCard.astro";
 
 // Styles
 import "../styles/style.css"
+import Testimonials from "../components/Home/Testimonials.astro";
 
 const headerLinks = [
   { name: "Portfolio", href: "#portfolio" },
@@ -42,17 +43,7 @@ const bannerLogos: any = [];
   <Process />
 
   <!-- TESTIMONIALS -->
-  {feedbacks.length > 0 && <section class="testimonials" id="testimonials">
-    <div class="reveal">
-      <div class="section-label">Cosa dicono di noi</div>
-      <h2 class="section-title">Clienti & Feedback</h2>
-    </div>
-    <div class="testi-grid">
-      {feedbacks.map((f: any) => (
-        <ReviewCard review={f}/>
-      ))}
-    </div>
-  </section>}
+  <Testimonials feedbacks={feedbacks} />
 
   <CTA />
   <Footer />
