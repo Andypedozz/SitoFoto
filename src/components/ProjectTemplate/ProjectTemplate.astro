@@ -4,10 +4,16 @@ import Layout from "../../layouts/Layout.astro";
 import Footer from "../Home/Footer.astro";
 import PhotoCard from "../Home/PhotoCard.astro";
 import VideoPlayer from "../Home/VideoPlayer.astro";
+import Header from "../Home/Header.astro";
 
 const { project } = Astro.props;
 
-const headerLinks = [{ name: "Home", href: "/" }];
+const headerLinks = [
+  { name: "Portfolio", href: "/#portfolio" },
+  { name: "Studio", href: "/#about" },
+  { name: "Processo", href: "/#process" },
+  { name: "Contatti", href: "/#contact" },
+];
 
 // Fetch related media
 const res = await fetch(
@@ -18,7 +24,6 @@ let media = await res.json();
 if (media.error) media = [];
 const photos = media.filter((media: any) => media.tipo === "image");
 const videos = media.filter((media: any) => media.tipo === "video");
-
 ---
 
 <Layout>
@@ -504,10 +509,14 @@ const videos = media.filter((media: any) => media.tipo === "video");
 
     /* ── MASONRY GALLERY ── */
     .gallery-section {
-      padding: 5rem 5vw;
+      padding: 5rem 0;
       background: var(--black-2);
+      width: 100%;
+      overflow-x: hidden;
     }
+
     .gallery-header {
+      padding: 0 5vw;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
@@ -515,11 +524,13 @@ const videos = media.filter((media: any) => media.tipo === "video");
       flex-wrap: wrap;
       gap: 1.5rem;
     }
+
     /* filter tabs */
     .filter-tabs {
       display: flex;
       gap: 0.2rem;
     }
+
     .filter-tab {
       font-size: 0.72rem;
       font-weight: 400;
@@ -532,30 +543,62 @@ const videos = media.filter((media: any) => media.tipo === "video");
       cursor: pointer;
       transition: all 0.25s;
     }
+
     .filter-tab:hover {
       color: var(--white);
       border-color: rgba(255, 255, 255, 0.12);
     }
+
     .filter-tab.active {
       border-color: var(--red);
       color: var(--red);
     }
 
-    /* masonry columns layout */
+    /* masonry columns layout - VERSIONE CORRETTA PER OCCUPARE TUTTO LO SPAZIO */
     .masonry-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      grid-auto-flow: dense;
-      gap: 3px;
+      column-count: 4;
+      column-gap: 3px;
+      width: 100%;
+      margin: 0;
+      padding: 0;
     }
-    @media (max-width: 900px) {
+
+    /* RESPONSIVE BREAKPOINTS PER COLONNE */
+    @media (max-width: 1200px) {
       .masonry-grid {
-        columns: 2;
+        column-count: 3;
       }
     }
-    @media (max-width: 560px) {
+
+    @media (max-width: 900px) {
       .masonry-grid {
-        columns: 1;
+        column-count: 2;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .masonry-grid {
+        column-count: 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .gallery-section {
+        padding: 3rem 0;
+      }
+
+      .gallery-header {
+        padding: 0 4vw;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .gallery-section {
+        padding: 2rem 0;
+      }
+
+      .gallery-header {
+        padding: 0 4vw;
       }
     }
 
@@ -1171,16 +1214,7 @@ const videos = media.filter((media: any) => media.tipo === "video");
   />
 
   <!-- ── NAV ── -->
-  <nav>
-    <a class="nav-logo" href="/">UG<span>ACTION</span>&nbsp;MEDIA</a>
-    <ul class="nav-links">
-      <li><a href="/#portfolio">Portfolio</a></li>
-      <li><a href="/#about">Studio</a></li>
-      <li><a href="/#process">Processo</a></li>
-      <li><a href="/#contact">Contatti</a></li>
-    </ul>
-    <a class="nav-cta" href="/#contact">Lavoriamo insieme</a>
-  </nav>
+  <Header links={headerLinks} /> 
 
   <!-- ── PROJECT HERO ── -->
   <section class="project-hero">
@@ -1258,30 +1292,37 @@ const videos = media.filter((media: any) => media.tipo === "video");
     </div>
 
     <div class="masonry-grid" id="masonryGrid">
-      {photos.map((photo: any) => <PhotoCard photo={photo} />)}
+      {
+        photos.map((photo: any, index: number) => (
+          <PhotoCard photo={photo} index={index} />
+        ))
+      }
     </div>
-
   </section>
 
   <!-- ── VIDEO REEL ── -->
-  {videos.length > 0 &&<section class="video-section">
-    <div class="video-header reveal">
-      <div class="section-label">Produzione video</div>
-      <h2 class="section-title">Highlight Reel</h2>
-    </div>
-    <div class="video-container">
-      {videos.map((video: any) => (
-        <VideoPlayer
-          src={video.url}
-          controls={false}
-          autoplay={true}
-          width={540}
-          height={960}
-          loop={true}
-        />
-      ))}
-    </div>
-  </section>}
+  {
+    videos.length > 0 && (
+      <section class="video-section">
+        <div class="video-header reveal">
+          <div class="section-label">Produzione video</div>
+          <h2 class="section-title">Highlight Reel</h2>
+        </div>
+        <div class="video-container">
+          {videos.map((video: any) => (
+            <VideoPlayer
+              src={video.url}
+              controls={false}
+              autoplay={true}
+              width={540}
+              height={960}
+              loop={true}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   <!-- ── RELATED PROJECTS ── -->
   <!-- <section class="related-section">
@@ -1349,58 +1390,6 @@ const videos = media.filter((media: any) => media.tipo === "video");
       </div>
     </div>
   </section>
-
-  <!-- ── FOOTER ── -->
-  <!-- <footer>
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <a class="nav-logo" href="/"
-          >UG<span style="color:var(--red)">ACTION</span>&nbsp;MEDIA</a
-        >
-        <p>
-          Fotografia e videomaking professionale per sport, eventi e brand.
-          Basati a Milano, operiamo in tutta Italia e in Europa.
-        </p>
-      </div>
-      <div class="footer-col">
-        <h4>Servizi</h4>
-        <ul>
-          <li><a href="#">Sport Action</a></li>
-          <li><a href="#">Event Coverage</a></li>
-          <li><a href="#">Brand Shooting</a></li>
-          <li><a href="#">Video Production</a></li>
-          <li><a href="#">Drone & Aerial</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Studio</h4>
-        <ul>
-          <li><a href="#">Chi siamo</a></li>
-          <li><a href="#">Portfolio</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Careers</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Contatti</h4>
-        <ul>
-          <li><a href="#">info@ugactionmedia.it</a></li>
-          <li><a href="#">+39 000 000 0000</a></li>
-          <li><a href="#">Via del Corso, Milano</a></li>
-          <li><a href="#">P.IVA 00000000000</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2024 UG Action Media. Tutti i diritti riservati.</p>
-      <div class="social-links">
-        <a class="social-link" href="#" aria-label="Instagram">IG</a>
-        <a class="social-link" href="#" aria-label="YouTube">YT</a>
-        <a class="social-link" href="#" aria-label="LinkedIn">LN</a>
-        <a class="social-link" href="#" aria-label="TikTok">TK</a>
-      </div>
-    </div>
-  </footer> -->
   <Footer />
 
   <!-- ── LIGHTBOX ── -->

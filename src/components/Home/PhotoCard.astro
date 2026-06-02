@@ -1,98 +1,113 @@
 ---
-const { photo } = Astro.props;
+const { photo, index } = Astro.props;
 ---
 
 <style>
+  .masonry-item {
+    break-inside: avoid;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 3px;
+    cursor: zoom-in;
+    width: 100%;
+    background: #111;
+  }
+
+  /* Altezza flessibile basata sull'aspect-ratio dell'immagine */
+  .masonry-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: grayscale(20%) brightness(0.88);
+    transition:
+      transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      filter 0.5s ease;
+  }
+
+  .masonry-item:hover img {
+    transform: scale(1.04);
+    filter: grayscale(0%) brightness(1);
+  }
+
+  .masonry-item-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      160deg,
+      transparent 50%,
+      rgba(10, 10, 10, 0.88) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.4rem;
+  }
+
+  .masonry-item:hover .masonry-item-overlay {
+    opacity: 1;
+  }
+
+  .masonry-item-cat {
+    font-size: 0.62rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 0.3rem;
+  }
+
+  .masonry-item-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+    color: var(--white);
+  }
+
+  .masonry-item-num {
+    position: absolute;
+    top: 0.8rem;
+    right: 1rem;
+    font-family: var(--font-display);
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.05);
+    line-height: 1;
+    pointer-events: none;
+    transition: color 0.3s;
+  }
+
+  .masonry-item:hover .masonry-item-num {
+    color: rgba(224, 32, 32, 0.1);
+  }
+
+  /* Mobile specific adjustments */
+  @media (max-width: 640px) {
     .masonry-item {
-        break-inside: avoid;
-        position: relative;
-        overflow: hidden;
-        margin-bottom: 3px;
-        cursor: zoom-in;
-
-        /* 🔥 controllo dimensione invece di width fissa */
-        width: 100%;
-        aspect-ratio: 3 / 4; /* default verticale, puoi sovrascriverlo */
-        background: #111;
+      margin-bottom: 2px;
     }
-
-    .masonry-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover; /* chiave per immagini miste */
-        display: block;
-
-        filter: grayscale(20%) brightness(0.88);
-        transition:
-            transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-            filter 0.5s ease;
-    }
-
-    .masonry-item:hover img {
-        transform: scale(1.06);
-        filter: grayscale(0%) brightness(1);
-    }
-
+    
     .masonry-item-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-            160deg,
-            transparent 50%,
-            rgba(10, 10, 10, 0.88) 100%
-        );
-        opacity: 0;
-        transition: opacity 0.4s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        padding: 1.4rem;
+      padding: 1rem;
     }
-
-    .masonry-item:hover .masonry-item-overlay {
-        opacity: 1;
-    }
-
-    .masonry-item-cat {
-        font-size: 0.62rem;
-        font-weight: 400;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--red);
-        margin-bottom: 0.3rem;
-    }
-
+    
     .masonry-item-title {
-        font-family: var(--font-display);
-        font-size: 1.15rem;
-        letter-spacing: 0.04em;
-        color: var(--white);
+      font-size: 0.95rem;
     }
-
-    .masonry-item-num {
-        position: absolute;
-        top: 0.8rem;
-        right: 1rem;
-        font-family: var(--font-display);
-        font-size: 3rem;
-        color: rgba(255, 255, 255, 0.05);
-        line-height: 1;
-        pointer-events: none;
-        transition: color 0.3s;
-    }
-
-    .masonry-item:hover .masonry-item-num {
-        color: rgba(224, 32, 32, 0.1);
-    }
+  }
 </style>
 
 <div
-    class="masonry-item"
-    data-cat="detail"
-    data-index="8"
-    data-src={photo.secureUrl}
-    data-title="Medaglia · oro e sudata"
-    data-cat-label="Dettagli"
+  class="masonry-item"
+  data-cat="detail"
+  data-index={index || 0}
+  data-src={photo.secureUrl}
+  data-title="Medaglia · oro e sudata"
+  data-cat-label="Dettagli"
 >
-    <img src={photo.secureUrl} alt="photo-card" loading="lazy" />
+  <img 
+    src={photo.secureUrl} 
+    alt="photo-card" 
+    loading="lazy"
+  />
 </div>

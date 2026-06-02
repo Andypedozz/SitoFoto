@@ -12,5 +12,8 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()]
   },
-  integrations: [react()]
+  integrations: [react()],
+  devToolbar: {
+    enabled: false
+  }
 });
