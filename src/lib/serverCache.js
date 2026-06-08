@@ -12,25 +12,30 @@ setInterval(() => {
   }
 }, CLEANUP_INTERVAL).unref();
 
-export function cachedFetch(url, options = {}) {
+export async function cachedFetch(url, options = {}) {
   const ttl = options.ttl ?? 60_000;
-  const key = options.key ?? (typeof url === "string" ? url : url.toString());
+  const key = options.key ?? String(url);
 
   const cached = cache.get(key);
+
   if (cached && Date.now() - cached.timestamp < ttl) {
-    return Promise.resolve(cached.response.clone());
+    return cached.data;
   }
 
-  return fetch(url, options).then((res) => {
-    if (!res.ok) return res;
+  const res = await fetch(url, options);
 
-    cache.set(key, {
-      response: res.clone(),
-      timestamp: Date.now(),
-    });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
 
-    return res;
+  const data = await res.json();
+
+  cache.set(key, {
+    data,
+    timestamp: Date.now(),
   });
+
+  return data;
 }
 
 export function clearCache(key) {

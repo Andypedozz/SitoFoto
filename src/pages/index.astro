@@ -26,11 +26,12 @@ const headerLinks = [
   { name: "Contatti", href: "#contact" },
 ]
 
-const [homeProjects, categories, feedbacks] = await Promise.all([
-  cachedFetch(new URL("/api/projects/homepage", Astro.request.url), { ttl: 300_000 }).then(res => res.json()),
-  cachedFetch(new URL("/api/categories", Astro.request.url), { ttl: 300_000 }).then(res => res.json()),
-  cachedFetch(new URL("/api/feedbacks", Astro.request.url), { ttl: 300_000 }).then(res => res.json()),
-]);
+const [homeProjects, categories, feedbacks] =
+  await Promise.all([
+    cachedFetch(new URL("/api/projects/homepage", Astro.request.url), { ttl: 300_000 }),
+    cachedFetch(new URL("/api/categories", Astro.request.url), { ttl: 300_000 }),
+    cachedFetch(new URL("/api/feedbacks", Astro.request.url), { ttl: 300_000 }),
+  ]);
 
 const bannerLogos: any = [];
 ---

@@ -5,6 +5,8 @@ import Footer from "../Home/Footer.astro";
 import PhotoCard from "../Home/PhotoCard.astro";
 import VideoPlayer from "../Home/VideoPlayer.astro";
 import Header from "../Home/Header.astro";
+import "../../styles/style.css";
+import { cachedFetch } from "../../lib/serverCache";
 
 const { project } = Astro.props;
 
@@ -16,11 +18,7 @@ const headerLinks = [
 ];
 
 // Fetch related media
-const res = await fetch(
-  new URL("/api/media?slug=" + project.slug, Astro.request.url),
-  { method: "GET" },
-);
-let media = await res.json();
+let media = await cachedFetch(new URL("/api/media?slug=" + project.slug, Astro.request.url), { ttl: 300_000 });
 if (media.error) media = [];
 const photos = media.filter((media: any) => media.tipo === "image");
 const videos = media.filter((media: any) => media.tipo === "video");
@@ -1094,92 +1092,6 @@ const videos = media.filter((media: any) => media.tipo === "video");
       color: var(--white);
       border-color: rgba(255, 255, 255, 0.5);
     }
-
-    /* ── FOOTER ── */
-    footer {
-      background: var(--black-2);
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .footer-inner {
-      display: grid;
-      grid-template-columns: 1.6fr 1fr 1fr 1fr;
-      gap: 3rem;
-      padding: 4rem 5vw;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    @media (max-width: 900px) {
-      .footer-inner {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    .footer-brand p {
-      font-size: 0.85rem;
-      line-height: 1.7;
-      color: var(--white-dim);
-      margin-top: 1rem;
-      max-width: 280px;
-    }
-    .footer-col h4 {
-      font-family: var(--font-display);
-      font-size: 0.95rem;
-      letter-spacing: 0.1em;
-      color: var(--white);
-      margin-bottom: 1.2rem;
-    }
-    .footer-col ul {
-      list-style: none;
-    }
-    .footer-col li + li {
-      margin-top: 0.7rem;
-    }
-    .footer-col a {
-      font-size: 0.82rem;
-      color: var(--white-dim);
-      text-decoration: none;
-      letter-spacing: 0.04em;
-      transition: color 0.25s;
-    }
-    .footer-col a:hover {
-      color: var(--red);
-    }
-    .footer-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.6rem 5vw;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .footer-bottom p {
-      font-size: 0.75rem;
-      letter-spacing: 0.1em;
-      color: rgba(245, 245, 245, 0.28);
-    }
-    .social-links {
-      display: flex;
-      gap: 0.6rem;
-    }
-    .social-link {
-      width: 36px;
-      height: 36px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      color: var(--white-dim);
-      text-decoration: none;
-      transition:
-        border-color 0.25s,
-        color 0.25s;
-    }
-    .social-link:hover {
-      border-color: var(--red);
-      color: var(--red);
-    }
-
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
       .project-info {
