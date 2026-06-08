@@ -24,4 +24,4 @@ pnpm-debug.log*
 .idea/
 
 signup.astro
-src/pages/api/signup.js
+signup.js
