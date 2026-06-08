@@ -63,5 +63,37 @@ export const onRequest = defineMiddleware((context, next) => {
         locals.user = user;
     }
 
-    return next();
+    return applyCacheControl(context, next);
 });
+
+async function applyCacheControl(context, next) {
+    const { request, url } = context;
+    const response = await next();
+    if (!response) return response;
+
+    const pathname = url.pathname;
+    if (!pathname.startsWith("/api/")) return response;
+
+    const newHeaders = new Headers(response.headers);
+
+    if (pathname === "/api/login" || pathname === "/api/signup" || pathname === "/api/logout") {
+        newHeaders.set("Cache-Control", "no-store");
+        return new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: newHeaders
+        });
+    }
+
+    if (request.method === "GET") {
+        newHeaders.set("Cache-Control", "public, max-age=60, s-maxage=60");
+    } else {
+        newHeaders.set("Cache-Control", "no-store");
+    }
+
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders
+    });
+}

@@ -84,7 +84,7 @@ export async function POST({ request }) {
         const data = await request.json();
 
         await db.execute(
-            "INSERT INTO Progetto (nome, slug, copertina, descrizione, homepage, evidenza, idCategoria, scatti) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO Progetto (nome, slug, copertina, descrizione, homepage, evidenza, idCategoria, scatti) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             [data.nome, data.slug, data.copertina, data.descrizione, 1, 1, data.idCategoria, 0]
         );
 

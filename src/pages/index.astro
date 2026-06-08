@@ -16,6 +16,7 @@ import ReviewCard from "../components/Home/ReviewCard.astro";
 // Styles
 import "../styles/style.css"
 import Testimonials from "../components/Home/Testimonials.astro";
+import { cachedFetch } from "../lib/serverCache";
 
 const headerLinks = [
   { name: "Portfolio", href: "#portfolio" },
@@ -25,9 +26,11 @@ const headerLinks = [
   { name: "Contatti", href: "#contact" },
 ]
 
-const homeProjects = await fetch(new URL("/api/projects/homepage", Astro.request.url)).then(res => res.json());
-const categories = await fetch(new URL("/api/categories", Astro.request.url)).then(res => res.json());
-const feedbacks = await fetch(new URL("/api/feedbacks", Astro.request.url)).then(res => res.json());
+const [homeProjects, categories, feedbacks] = await Promise.all([
+  cachedFetch(new URL("/api/projects/homepage", Astro.request.url), { ttl: 300_000 }).then(res => res.json()),
+  cachedFetch(new URL("/api/categories", Astro.request.url), { ttl: 300_000 }).then(res => res.json()),
+  cachedFetch(new URL("/api/feedbacks", Astro.request.url), { ttl: 300_000 }).then(res => res.json()),
+]);
 
 const bannerLogos: any = [];
 ---
