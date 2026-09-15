@@ -6,1239 +6,146 @@ import PhotoCard from "../Home/PhotoCard.astro";
 import VideoPlayer from "../Home/VideoPlayer.astro";
 import Header from "../Home/Header.astro";
 import "../../styles/style.css";
+import "../../styles/project-template.css";
 import { cachedFetch } from "../../lib/serverCache";
 
 const { project } = Astro.props;
 
 const headerLinks = [
-  { name: "Portfolio", href: "/#portfolio" },
-  { name: "Studio", href: "/#about" },
-  { name: "Processo", href: "/#process" },
-  { name: "Contatti", href: "/#contact" },
+    { name: "Portfolio", href: "/#portfolio" },
+    { name: "Studio", href: "/#about" },
+    { name: "Processo", href: "/#process" },
+    { name: "Contatti", href: "/#contact" },
 ];
 
 // Fetch related media
-let media = await cachedFetch(new URL("/api/media?slug=" + project.slug, Astro.request.url), { ttl: 300_000 });
+let media = await cachedFetch(
+    new URL("/api/media?slug=" + project.slug, Astro.request.url),
+    { ttl: 300_000 },
+);
 if (media.error) media = [];
 const photos = media.filter((media: any) => media.tipo === "image");
 const videos = media.filter((media: any) => media.tipo === "video");
 ---
 
 <Layout>
-  <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&display=swap"
+        rel="stylesheet"
+    />
 
-    :root {
-      --black: #0a0a0a;
-      --black-2: #111111;
-      --black-3: #161616;
-      --red: #e02020;
-      --red-dark: #a01515;
-      --red-glow: rgba(224, 32, 32, 0.18);
-      --white: #f5f5f5;
-      --white-dim: rgba(245, 245, 245, 0.55);
-      --white-faint: rgba(245, 245, 245, 0.08);
-      --font-display: "Bebas Neue", sans-serif;
-      --font-body: "Barlow", sans-serif;
-    }
+    <!-- ── NAV ── -->
+    <Header links={headerLinks} />
 
-    html {
-      scroll-behavior: smooth;
-    }
+    <!-- ── PROJECT HERO ── -->
+    <section class="project-hero">
+        <div class="project-hero-bg"></div>
+        <div class="project-hero-overlay"></div>
+        <div class="project-hero-line"></div>
 
-    body {
-      background: var(--black);
-      color: var(--white);
-      font-family: var(--font-body);
-      font-weight: 300;
-      overflow-x: hidden;
-    }
+        <a class="project-breadcrumb" href="/#portfolio">
+            <svg viewBox="0 0 24 24">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Portfolio</span>
+        </a>
 
-    /* ── NOISE OVERLAY ── */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      background-size: 200px 200px;
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0.35;
-    }
-
-    /* ── ANIMATIONS ── */
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(28px);
-      }
-      to {
-        opacity: 1;
-        transform: none;
-      }
-    }
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-    @keyframes scrollPulse {
-      0%,
-      100% {
-        opacity: 0.4;
-      }
-      50% {
-        opacity: 1;
-      }
-    }
-    .reveal {
-      opacity: 0;
-      transform: translateY(28px);
-      transition:
-        opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .reveal.visible {
-      opacity: 1;
-      transform: none;
-    }
-    .reveal-delay-1 {
-      transition-delay: 0.12s;
-    }
-    .reveal-delay-2 {
-      transition-delay: 0.24s;
-    }
-    .reveal-delay-3 {
-      transition-delay: 0.36s;
-    }
-
-    /* ── NAV ── */
-    nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 5vw;
-      height: 72px;
-      background: rgba(10, 10, 10, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      transition: background 0.3s;
-    }
-    .nav-logo {
-      font-family: var(--font-display);
-      font-size: 1.55rem;
-      letter-spacing: 0.12em;
-      color: var(--white);
-      text-decoration: none;
-    }
-    .nav-logo span {
-      color: var(--red);
-    }
-    .nav-links {
-      display: flex;
-      gap: 2.5rem;
-      list-style: none;
-    }
-    .nav-links a {
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      font-weight: 400;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      text-decoration: none;
-      color: var(--white-dim);
-      transition: color 0.25s;
-      position: relative;
-    }
-    .nav-links a::after {
-      content: "";
-      position: absolute;
-      bottom: -4px;
-      left: 0;
-      width: 0;
-      height: 1px;
-      background: var(--red);
-      transition: width 0.3s ease;
-    }
-    .nav-links a:hover {
-      color: var(--white);
-    }
-    .nav-links a:hover::after {
-      width: 100%;
-    }
-    .nav-cta {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      text-decoration: none;
-      color: var(--white);
-      border: 1px solid var(--red);
-      padding: 0.5rem 1.4rem;
-      transition:
-        background 0.25s,
-        color 0.25s;
-    }
-    .nav-cta:hover {
-      background: var(--red);
-    }
-
-    /* ── PROJECT HERO ── */
-    .project-hero {
-      position: relative;
-      height: 72vh;
-      min-height: 520px;
-      display: flex;
-      align-items: flex-end;
-      overflow: hidden;
-    }
-    .project-hero-bg {
-      position: absolute;
-      inset: 0;
-      background-image: url("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1800&q=80");
-      background-size: cover;
-      background-position: center 35%;
-      transform: scale(1.05);
-      animation: heroZoom 14s ease-out forwards;
-    }
-    @keyframes heroZoom {
-      from {
-        transform: scale(1.05);
-      }
-      to {
-        transform: scale(1);
-      }
-    }
-    .project-hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to top,
-        rgba(10, 10, 10, 1) 0%,
-        rgba(10, 10, 10, 0.6) 40%,
-        rgba(10, 10, 10, 0.2) 100%
-      );
-    }
-    /* red accent line across the hero */
-    .project-hero-line {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 2px;
-      background: linear-gradient(to right, var(--red) 0%, transparent 60%);
-      z-index: 3;
-    }
-    /* back breadcrumb */
-    .project-breadcrumb {
-      position: absolute;
-      top: 92px;
-      left: 5vw;
-      z-index: 4;
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-      text-decoration: none;
-      opacity: 0;
-      animation: fadeIn 0.7s 0.3s ease forwards;
-    }
-    .project-breadcrumb svg {
-      width: 14px;
-      height: 14px;
-      stroke: var(--red);
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      transition: transform 0.25s;
-    }
-    .project-breadcrumb:hover svg {
-      transform: translateX(-4px);
-    }
-    .project-breadcrumb span {
-      font-size: 0.72rem;
-      font-weight: 400;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--white-dim);
-      transition: color 0.25s;
-    }
-    .project-breadcrumb:hover span {
-      color: var(--white);
-    }
-
-    .project-hero-content {
-      position: relative;
-      z-index: 2;
-      padding: 0 5vw 6vh;
-      width: 100%;
-    }
-    .project-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.72rem;
-      font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 1rem;
-      opacity: 0;
-      animation: fadeUp 0.9s 0.5s ease forwards;
-    }
-    .project-eyebrow::before {
-      content: "";
-      display: block;
-      width: 32px;
-      height: 1px;
-      background: var(--red);
-    }
-    .project-hero-title {
-      font-family: var(--font-display);
-      font-size: clamp(3.2rem, 7.5vw, 6.5rem);
-      line-height: 0.93;
-      letter-spacing: 0.02em;
-      color: var(--white);
-      margin-bottom: 1.8rem;
-      opacity: 0;
-      animation: fadeUp 1s 0.7s ease forwards;
-    }
-    .project-hero-title em {
-      color: var(--red);
-      font-style: normal;
-    }
-    /* meta row */
-    .project-meta-row {
-      display: flex;
-      gap: 3rem;
-      flex-wrap: wrap;
-      opacity: 0;
-      animation: fadeUp 1s 0.9s ease forwards;
-    }
-    .project-meta-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-    }
-    .project-meta-label {
-      font-size: 0.65rem;
-      font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--red);
-    }
-    .project-meta-value {
-      font-size: 0.88rem;
-      font-weight: 400;
-      letter-spacing: 0.06em;
-      color: var(--white);
-    }
-
-    /* ── PROJECT INFO ── */
-    .project-info {
-      padding: 5.5rem 5vw;
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 5rem;
-      align-items: start;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .project-description {
-      font-size: 1.08rem;
-      line-height: 1.8;
-      color: var(--white-dim);
-    }
-    .project-description p + p {
-      margin-top: 1.4rem;
-    }
-    .project-description strong {
-      color: var(--white);
-      font-weight: 500;
-    }
-    .project-sidebar {
-    }
-    .sidebar-block {
-      padding: 1.6rem 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.07);
-    }
-    .sidebar-block:first-child {
-      border-top: none;
-      padding-top: 0;
-    }
-    .sidebar-block-label {
-      font-size: 0.65rem;
-      font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 0.7rem;
-    }
-    .sidebar-block-value {
-      font-size: 0.9rem;
-      line-height: 1.65;
-      color: var(--white-dim);
-    }
-    .tag-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-top: 0.2rem;
-    }
-    .tag {
-      font-size: 0.68rem;
-      font-weight: 400;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--white-dim);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 0.3rem 0.85rem;
-      transition:
-        border-color 0.25s,
-        color 0.25s;
-    }
-    .tag:hover {
-      border-color: var(--red);
-      color: var(--white);
-    }
-
-    /* ── SECTION SHARED ── */
-    .section-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.72rem;
-      font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 1.2rem;
-    }
-    .section-label::before {
-      content: "";
-      display: block;
-      width: 28px;
-      height: 1px;
-      background: var(--red);
-    }
-    .section-title {
-      font-family: var(--font-display);
-      font-size: clamp(2.4rem, 5vw, 3.8rem);
-      line-height: 1;
-      letter-spacing: 0.03em;
-      color: var(--white);
-      margin-bottom: 1.4rem;
-    }
-
-    /* ── FEATURED SHOT ── */
-    .featured-shot {
-      padding: 0 5vw 5rem;
-    }
-    .featured-shot-header {
-      margin-bottom: 2.5rem;
-    }
-    .featured-shot-wrap {
-      position: relative;
-      aspect-ratio: 21/9;
-      overflow: hidden;
-      cursor: zoom-in;
-    }
-    .featured-shot-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: brightness(0.9);
-      transition:
-        transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        filter 0.6s ease;
-    }
-    .featured-shot-wrap:hover img {
-      transform: scale(1.04);
-      filter: brightness(1);
-    }
-    /* corner accent */
-    .featured-shot-wrap::after {
-      content: "";
-      position: absolute;
-      bottom: 1.8rem;
-      right: 1.8rem;
-      width: 50px;
-      height: 50px;
-      border-right: 2px solid var(--red);
-      border-bottom: 2px solid var(--red);
-      pointer-events: none;
-      opacity: 0.6;
-    }
-    /* image count badge */
-    .shot-count-badge {
-      position: absolute;
-      bottom: 1.8rem;
-      left: 1.8rem;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.68rem;
-      font-weight: 400;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--white-dim);
-      z-index: 2;
-    }
-    .shot-count-badge::before {
-      content: "";
-      display: block;
-      width: 6px;
-      height: 6px;
-      background: var(--red);
-    }
-
-    /* ── MASONRY GALLERY ── */
-    .gallery-section {
-      padding: 5rem 0;
-      background: var(--black-2);
-      width: 100%;
-      overflow-x: hidden;
-    }
-
-    .gallery-header {
-      padding: 0 5vw;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 3rem;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-
-    /* filter tabs */
-    .filter-tabs {
-      display: flex;
-      gap: 0.2rem;
-    }
-
-    .filter-tab {
-      font-size: 0.72rem;
-      font-weight: 400;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--white-dim);
-      padding: 0.5rem 1.2rem;
-      border: 1px solid transparent;
-      background: none;
-      cursor: pointer;
-      transition: all 0.25s;
-    }
-
-    .filter-tab:hover {
-      color: var(--white);
-      border-color: rgba(255, 255, 255, 0.12);
-    }
-
-    .filter-tab.active {
-      border-color: var(--red);
-      color: var(--red);
-    }
-
-    /* masonry columns layout - VERSIONE CORRETTA PER OCCUPARE TUTTO LO SPAZIO */
-    .masonry-grid {
-      column-count: 4;
-      column-gap: 3px;
-      width: 100%;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* RESPONSIVE BREAKPOINTS PER COLONNE */
-    @media (max-width: 1200px) {
-      .masonry-grid {
-        column-count: 3;
-      }
-    }
-
-    @media (max-width: 900px) {
-      .masonry-grid {
-        column-count: 2;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .masonry-grid {
-        column-count: 1;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .gallery-section {
-        padding: 3rem 0;
-      }
-
-      .gallery-header {
-        padding: 0 4vw;
-      }
-    }
-
-    @media (max-width: 560px) {
-      .gallery-section {
-        padding: 2rem 0;
-      }
-
-      .gallery-header {
-        padding: 0 4vw;
-      }
-    }
-
-    /* ── LIGHTBOX ── */
-    .lightbox {
-      position: fixed;
-      inset: 0;
-      z-index: 1000;
-      background: rgba(10, 10, 10, 0.97);
-      backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s ease;
-    }
-    .lightbox.open {
-      opacity: 1;
-      pointer-events: all;
-    }
-    .lightbox-inner {
-      position: relative;
-      max-width: 90vw;
-      max-height: 88vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.2rem;
-    }
-    .lightbox-img-wrap {
-      position: relative;
-      max-width: 90vw;
-      max-height: 78vh;
-      overflow: hidden;
-    }
-    .lightbox-img-wrap img {
-      display: block;
-      max-width: 90vw;
-      max-height: 78vh;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-    }
-    /* red corner accent */
-    .lightbox-img-wrap::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 40px;
-      height: 40px;
-      border-left: 2px solid var(--red);
-      border-top: 2px solid var(--red);
-      z-index: 2;
-      pointer-events: none;
-    }
-    .lightbox-img-wrap::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 40px;
-      height: 40px;
-      border-right: 2px solid var(--red);
-      border-bottom: 2px solid var(--red);
-      z-index: 2;
-      pointer-events: none;
-    }
-    .lightbox-caption {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      gap: 2rem;
-    }
-    .lightbox-caption-text {
-    }
-    .lightbox-caption-cat {
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 0.2rem;
-    }
-    .lightbox-caption-title {
-      font-family: var(--font-display);
-      font-size: 1.4rem;
-      letter-spacing: 0.04em;
-      color: var(--white);
-    }
-    .lightbox-counter {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      letter-spacing: 0.04em;
-      color: rgba(255, 255, 255, 0.18);
-      flex-shrink: 0;
-    }
-    .lightbox-counter span {
-      color: var(--red);
-    }
-    /* close button */
-    .lightbox-close {
-      position: fixed;
-      top: 1.4rem;
-      right: 1.6rem;
-      z-index: 10;
-      background: none;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: var(--white-dim);
-      width: 44px;
-      height: 44px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition:
-        border-color 0.25s,
-        color 0.25s;
-    }
-    .lightbox-close:hover {
-      border-color: var(--red);
-      color: var(--red);
-    }
-    .lightbox-close svg {
-      width: 16px;
-      height: 16px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-    }
-    /* nav arrows */
-    .lightbox-prev,
-    .lightbox-next {
-      position: fixed;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10;
-      background: none;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--white-dim);
-      width: 52px;
-      height: 52px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition:
-        border-color 0.25s,
-        color 0.25s,
-        transform 0.25s;
-    }
-    .lightbox-prev {
-      left: 1.5rem;
-    }
-    .lightbox-next {
-      right: 1.5rem;
-    }
-    .lightbox-prev:hover,
-    .lightbox-next:hover {
-      border-color: var(--red);
-      color: var(--red);
-    }
-    .lightbox-prev:hover {
-      transform: translateY(-50%) translateX(-3px);
-    }
-    .lightbox-next:hover {
-      transform: translateY(-50%) translateX(3px);
-    }
-    .lightbox-prev svg,
-    .lightbox-next svg {
-      width: 18px;
-      height: 18px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    /* ── STATS BAR ── */
-    .stats-bar {
-      background: var(--black);
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-    }
-    .stat-item {
-      padding: 2.2rem 2rem;
-      border-right: 1px solid rgba(255, 255, 255, 0.06);
-      text-align: center;
-      opacity: 0;
-      transform: translateY(20px);
-      transition:
-        opacity 0.7s ease,
-        transform 0.7s ease;
-    }
-    .stat-item:last-child {
-      border-right: none;
-    }
-    .stat-item.visible {
-      opacity: 1;
-      transform: none;
-    }
-    .stat-number {
-      font-family: var(--font-display);
-      font-size: 2.8rem;
-      letter-spacing: 0.04em;
-      color: var(--white);
-      display: block;
-    }
-    .stat-number em {
-      color: var(--red);
-      font-style: normal;
-    }
-    .stat-label {
-      font-size: 0.72rem;
-      font-weight: 400;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--white-dim);
-      display: block;
-      margin-top: 0.3rem;
-    }
-
-    /* ── VIDEO REEL ── */
-    .video-section {
-      padding: 5.5rem 5vw;
-      background: var(--black);
-      text-align: center;
-    }
-    .video-header {
-      margin-bottom: 2.5rem;
-    }
-    .video-wrap {
-      position: relative;
-      aspect-ratio: 16/9;
-      background: var(--black-2);
-      overflow: hidden;
-      cursor: pointer;
-    }
-    .video-container {
-      display: flex;
-      justify-content: center;
-    }
-    .video-thumb {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: brightness(0.55);
-      transition: filter 0.4s ease;
-    }
-    .video-wrap:hover .video-thumb {
-      filter: brightness(0.45);
-    }
-    .video-play-btn {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1.2rem;
-    }
-    .play-circle {
-      width: 88px;
-      height: 88px;
-      border: 2px solid rgba(255, 255, 255, 0.5);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition:
-        border-color 0.3s,
-        transform 0.3s;
-    }
-    .play-circle svg {
-      width: 28px;
-      height: 28px;
-      fill: var(--white);
-      margin-left: 4px;
-    }
-    .video-wrap:hover .play-circle {
-      border-color: var(--red);
-      transform: scale(1.1);
-    }
-    .video-play-label {
-      font-size: 0.72rem;
-      font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--white-dim);
-    }
-    .video-overlay-lines {
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(255, 255, 255, 0.012) 3px,
-        rgba(255, 255, 255, 0.012) 4px
-      );
-      pointer-events: none;
-    }
-    /* video info strip below */
-    .video-strip {
-      display: flex;
-      align-items: center;
-      gap: 2.5rem;
-      padding: 1.4rem 0 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      margin-top: 0.8rem;
-      flex-wrap: wrap;
-    }
-    .video-strip-item {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-    .video-strip-dot {
-      width: 4px;
-      height: 4px;
-      background: var(--red);
-      flex-shrink: 0;
-    }
-    .video-strip-text {
-      font-size: 0.78rem;
-      font-weight: 300;
-      letter-spacing: 0.1em;
-      color: var(--white-dim);
-    }
-
-    /* ── RELATED PROJECTS ── */
-    .related-section {
-      padding: 5.5rem 5vw;
-      background: var(--black-2);
-    }
-    .related-header {
-      margin-bottom: 3rem;
-    }
-    .related-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 3px;
-    }
-    @media (max-width: 900px) {
-      .related-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    @media (max-width: 560px) {
-      .related-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    .related-card {
-      position: relative;
-      aspect-ratio: 4/5;
-      overflow: hidden;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .related-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: grayscale(25%) brightness(0.8);
-      transition:
-        transform 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        filter 0.5s ease;
-    }
-    .related-card:hover img {
-      transform: scale(1.07);
-      filter: grayscale(0%) brightness(1);
-    }
-    .related-card-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        160deg,
-        transparent 40%,
-        rgba(10, 10, 10, 0.92) 100%
-      );
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 1.6rem;
-      transition: background 0.4s;
-    }
-    .related-card:hover .related-card-overlay {
-      background: linear-gradient(
-        160deg,
-        transparent 20%,
-        rgba(10, 10, 10, 0.95) 100%
-      );
-    }
-    .related-card-cat {
-      font-size: 0.62rem;
-      font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 0.35rem;
-      transform: translateY(6px);
-      opacity: 0.8;
-      transition:
-        transform 0.35s ease,
-        opacity 0.35s ease;
-    }
-    .related-card:hover .related-card-cat {
-      transform: none;
-      opacity: 1;
-    }
-    .related-card-title {
-      font-family: var(--font-display);
-      font-size: 1.35rem;
-      letter-spacing: 0.04em;
-      line-height: 1.05;
-      color: var(--white);
-      transform: translateY(6px);
-      transition: transform 0.35s 0.04s ease;
-    }
-    .related-card:hover .related-card-title {
-      transform: none;
-    }
-
-    /* ── CTA ── */
-    .cta-section {
-      position: relative;
-      text-align: center;
-      padding: 7rem 5vw;
-      overflow: hidden;
-    }
-    .cta-bg {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(
-        ellipse 70% 80% at 50% 50%,
-        rgba(224, 32, 32, 0.08) 0%,
-        transparent 70%
-      );
-      pointer-events: none;
-    }
-    .cta-divider {
-      width: 48px;
-      height: 2px;
-      background: var(--red);
-      margin: 1.6rem auto;
-    }
-    .section-body {
-      font-size: 1rem;
-      line-height: 1.75;
-      color: var(--white-dim);
-      max-width: 480px;
-      margin: 0 auto 2.4rem;
-    }
-    .btn-primary {
-      display: inline-block;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      text-decoration: none;
-      color: var(--white);
-      background: var(--red);
-      padding: 0.85rem 2.2rem;
-      transition:
-        background 0.25s,
-        transform 0.2s;
-    }
-    .btn-primary:hover {
-      background: var(--red-dark);
-      transform: translateY(-2px);
-    }
-    .btn-ghost {
-      display: inline-block;
-      font-size: 0.78rem;
-      font-weight: 400;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      text-decoration: none;
-      color: var(--white-dim);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 0.85rem 2.2rem;
-      transition:
-        color 0.25s,
-        border-color 0.25s;
-    }
-    .btn-ghost:hover {
-      color: var(--white);
-      border-color: rgba(255, 255, 255, 0.5);
-    }
-    /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      .project-info {
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
-      }
-      .stats-bar {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .stat-item:nth-child(2) {
-        border-right: none;
-      }
-    }
-    @media (max-width: 640px) {
-      .nav-links {
-        display: none;
-      }
-      .project-meta-row {
-        gap: 1.6rem;
-      }
-      .stats-bar {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-  </style>
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&display=swap"
-    rel="stylesheet"
-  />
-
-  <!-- ── NAV ── -->
-  <Header links={headerLinks} /> 
-
-  <!-- ── PROJECT HERO ── -->
-  <section class="project-hero">
-    <div class="project-hero-bg"></div>
-    <div class="project-hero-overlay"></div>
-    <div class="project-hero-line"></div>
-
-    <a class="project-breadcrumb" href="/#portfolio">
-      <svg viewBox="0 0 24 24"
-        ><polyline points="15 18 9 12 15 6"></polyline></svg
-      >
-      <span>Portfolio</span>
-    </a>
-
-    <div class="project-hero-content">
-      <div class="project-eyebrow">Evento &mdash; 2024</div>
-      <h1 class="project-hero-title">{project.nome}</h1>
-      <!-- <h1 class="project-hero-title">{project.nome}</h1> -->
-      <div class="project-meta-row">
-        <div class="project-meta-item">
-          <span class="project-meta-label">Cliente</span>
-          <span class="project-meta-value">{project.nome}</span>
+        <div class="project-hero-content">
+            <div class="project-eyebrow">Evento &mdash; 2024</div>
+            <h1 class="project-hero-title">{project.nome}</h1>
+            <!-- <h1 class="project-hero-title">{project.nome}</h1> -->
+            <div class="project-meta-row">
+                <div class="project-meta-item">
+                    <span class="project-meta-label">Cliente</span>
+                    <span class="project-meta-value">{project.nome}</span>
+                </div>
+                <div class="project-meta-item">
+                    <span class="project-meta-label">Data</span>
+                    <span class="project-meta-value">14 Aprile 2024</span>
+                </div>
+                <div class="project-meta-item">
+                    <span class="project-meta-label">Categoria</span>
+                    <span class="project-meta-value">
+                        Sport Action / Event Coverage
+                    </span>
+                </div>
+            </div>
         </div>
-        <div class="project-meta-item">
-          <span class="project-meta-label">Data</span>
-          <span class="project-meta-value">14 Aprile 2024</span>
-        </div>
-        <div class="project-meta-item">
-          <span class="project-meta-label">Categoria</span>
-          <span class="project-meta-value">Sport Action / Event Coverage</span>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ── PROJECT INFO ── -->
-  <section class="project-info">
-    <div class="project-description reveal">
-      <p>{project.descrizione}</p>
-    </div>
-    <div class="project-sidebar">
-      <div class="sidebar-block reveal reveal-delay-1">
-        <div class="sidebar-block-label">Servizi erogati</div>
-        <div class="tag-list">
-          <span class="tag">Sport Action</span>
-          <span class="tag">Event Coverage</span>
-          <span class="tag">Video Production</span>
-          <span class="tag">Drone Aerial</span>
-          <span class="tag">Post-produzione</span>
+    <!-- ── PROJECT INFO ── -->
+    <section class="project-info">
+        <div class="project-description reveal">
+            <p>{project.descrizione}</p>
         </div>
-      </div>
-      <div class="sidebar-block reveal reveal-delay-2">
-        <div class="sidebar-block-label">Consegna</div>
-        <div class="sidebar-block-value">
-          {project.scatti}
+        <div class="project-sidebar">
+            <div class="sidebar-block reveal reveal-delay-1">
+                <div class="sidebar-block-label">Servizi erogati</div>
+                <div class="tag-list">
+                    <span class="tag">Sport Action</span>
+                    <span class="tag">Event Coverage</span>
+                    <span class="tag">Video Production</span>
+                    <span class="tag">Drone Aerial</span>
+                    <span class="tag">Post-produzione</span>
+                </div>
+            </div>
+            <div class="sidebar-block reveal reveal-delay-2">
+                <div class="sidebar-block-label">Consegna</div>
+                <div class="sidebar-block-value">{project.scatti}</div>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ── MASONRY GALLERY ── -->
-  <section class="gallery-section">
-    <div class="gallery-header">
-      <div class="reveal">
-        <div class="section-label">Gallery del progetto</div>
-        <h2 class="section-title">Tutti gli scatti</h2>
-      </div>
-      <!-- <div class="filter-tabs reveal reveal-delay-1">
+    <!-- ── MASONRY GALLERY ── -->
+    <section class="gallery-section">
+        <div class="gallery-header">
+            <div class="reveal">
+                <div class="section-label">Gallery del progetto</div>
+                <h2 class="section-title">Tutti gli scatti</h2>
+            </div>
+            <!-- <div class="filter-tabs reveal reveal-delay-1">
         <button class="filter-tab active" data-filter="all">Tutti</button>
         <button class="filter-tab" data-filter="action">Action</button>
         <button class="filter-tab" data-filter="portraits">Ritratti</button>
         <button class="filter-tab" data-filter="aerial">Drone</button>
         <button class="filter-tab" data-filter="detail">Dettagli</button>
       </div> -->
-    </div>
-
-    <div class="masonry-grid" id="masonryGrid">
-      {
-        photos.map((photo: any, index: number) => (
-          <PhotoCard photo={photo} index={index} />
-        ))
-      }
-    </div>
-  </section>
-
-  <!-- ── VIDEO REEL ── -->
-  {
-    videos.length > 0 && (
-      <section class="video-section">
-        <div class="video-header reveal">
-          <div class="section-label">Produzione video</div>
-          <h2 class="section-title">Highlight Reel</h2>
         </div>
-        <div class="video-container">
-          {videos.map((video: any) => (
-            <VideoPlayer
-              src={video.url}
-              controls={false}
-              autoplay={true}
-              width={540}
-              height={960}
-              loop={true}
-              muted={true}
-            />
-          ))}
-        </div>
-      </section>
-    )
-  }
 
-  <!-- ── RELATED PROJECTS ── -->
-  <!-- <section class="related-section">
+        <div class="masonry-grid" id="masonryGrid">
+            {photos.map((photo: any, index: number) => (
+                <PhotoCard photo={photo} index={index} />
+            ))}
+        </div>
+    </section>
+
+    <!-- ── VIDEO REEL ── -->
+    {videos.length > 0 && (
+        <section class="video-section">
+            <div class="video-header reveal">
+                <div class="section-label">Produzione video</div>
+                <h2 class="section-title">Highlight Reel</h2>
+            </div>
+            <div class="video-container">
+                {videos.map((video: any) => (
+                    <VideoPlayer
+                        src={video.url}
+                        controls={false}
+                        autoplay={true}
+                        width={540}
+                        height={960}
+                        loop={true}
+                        muted={true}
+                    />
+                ))}
+            </div>
+        </section>
+    )}
+
+    <!-- ── RELATED PROJECTS ── -->
+    <!-- <section class="related-section">
     <div class="related-header reveal">
       <div class="section-label">Scopri altri lavori</div>
       <h2 class="section-title">Progetti correlati</h2>
@@ -1280,182 +187,196 @@ const videos = media.filter((media: any) => media.tipo === "video");
     </div>
   </section> -->
 
-  <!-- ── CTA ── -->
-  <section class="cta-section" id="contact">
-    <div class="cta-bg"></div>
-    <div class="reveal">
-      <div class="section-label" style="justify-content:center;">
-        Hai un progetto simile?
-      </div>
-      <h2 class="section-title">Raccontiamo<br />la tua storia</h2>
-      <div class="cta-divider"></div>
-      <p class="section-body">
-        Che si tratti di una maratona, di un campionato o di un evento brand,
-        portiamo la stessa cura e la stessa intensità in ogni progetto.
-      </p>
-      <div
-        style="display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;"
-      >
-        <a class="btn-primary" href="mailto:ugactionmedia@gmail.com"
-          >Scrivici subito</a
-        >
-        <a class="btn-ghost" href="/#portfolio">Vedi il portfolio</a>
-      </div>
-    </div>
-  </section>
-  <Footer />
-
-  <!-- ── LIGHTBOX ── -->
-  <div
-    class="lightbox"
-    id="lightbox"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Visualizzatore immagini"
-  >
-    <button class="lightbox-close" id="lbClose" aria-label="Chiudi">
-      <svg viewBox="0 0 24 24"
-        ><line x1="18" y1="6" x2="6" y2="18"></line><line
-          x1="6"
-          y1="6"
-          x2="18"
-          y2="18"></line></svg
-      >
-    </button>
-    <button class="lightbox-prev" id="lbPrev" aria-label="Precedente">
-      <svg viewBox="0 0 24 24"
-        ><polyline points="15 18 9 12 15 6"></polyline></svg
-      >
-    </button>
-    <button class="lightbox-next" id="lbNext" aria-label="Successiva">
-      <svg viewBox="0 0 24 24"
-        ><polyline points="9 18 15 12 9 6"></polyline></svg
-      >
-    </button>
-    <div class="lightbox-inner">
-      <div class="lightbox-img-wrap">
-        <img id="lbImg" src="" alt="" />
-      </div>
-      <div class="lightbox-caption">
-        <div class="lightbox-caption-text">
-          <div class="lightbox-caption-cat" id="lbCat"></div>
-          <div class="lightbox-caption-title" id="lbTitle"></div>
+    <!-- ── CTA ── -->
+    <section class="cta-section" id="contact">
+        <div class="cta-bg"></div>
+        <div class="reveal">
+            <div class="section-label" style="justify-content:center;">
+                Hai un progetto simile?
+            </div>
+            <h2 class="section-title">
+                Raccontiamo
+                <br />
+                la tua storia
+            </h2>
+            <div class="cta-divider"></div>
+            <p class="section-body">
+                Che si tratti di una maratona, di un campionato o di un evento
+                brand, portiamo la stessa cura e la stessa intensità in ogni
+                progetto.
+            </p>
+            <div style="display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;">
+                <a class="btn-primary" href="mailto:ugactionmedia@gmail.com">
+                    Scrivici subito
+                </a>
+                <a class="btn-ghost" href="/#portfolio">
+                    Vedi il portfolio
+                </a>
+            </div>
         </div>
-        <div class="lightbox-counter">
-          <span id="lbCurrent">01</span>/<span id="lbTotal">12</span>
+    </section>
+    <Footer />
+
+    <!-- ── LIGHTBOX ── -->
+    <div
+        class="lightbox"
+        id="lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Visualizzatore immagini"
+    >
+        <button class="lightbox-close" id="lbClose" aria-label="Chiudi">
+            <svg viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <button class="lightbox-prev" id="lbPrev" aria-label="Precedente">
+            <svg viewBox="0 0 24 24">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+        <button class="lightbox-next" id="lbNext" aria-label="Successiva">
+            <svg viewBox="0 0 24 24">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </button>
+        <div class="lightbox-inner">
+            <div class="lightbox-img-wrap">
+                <img id="lbImg" src="" alt="" />
+            </div>
+            <div class="lightbox-caption">
+                <div class="lightbox-caption-text">
+                    <div class="lightbox-caption-cat" id="lbCat"></div>
+                    <div class="lightbox-caption-title" id="lbTitle"></div>
+                </div>
+                <div class="lightbox-counter">
+                    <span id="lbCurrent">01</span>/<span id="lbTotal">12</span>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <script is:inline>
-    /* ── Intersection reveal ── */
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add("visible");
-        });
-      },
-      { threshold: 0.12 },
-    );
-    document
-      .querySelectorAll(".reveal, .stat-item")
-      .forEach((el) => io.observe(el));
-
-    /* ── Navbar scroll ── */
-    window.addEventListener("scroll", () => {
-      document.querySelector("nav").style.background =
-        window.scrollY > 60 ? "rgba(10,10,10,0.97)" : "rgba(10,10,10,0.85)";
-    });
-
-    /* ── Gallery filter ── */
-    const items = Array.from(document.querySelectorAll(".masonry-item"));
-    document.querySelectorAll(".filter-tab").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document
-          .querySelectorAll(".filter-tab")
-          .forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        const filter = btn.dataset.filter;
-        items.forEach((item) => {
-          const match = filter === "all" || item.dataset.cat === filter;
-          item.style.display = match ? "" : "none";
-        });
-      });
-    });
-
-    /* ── Lightbox ── */
-    const lightbox = document.getElementById("lightbox");
-    const lbImg = document.getElementById("lbImg");
-    const lbCat = document.getElementById("lbCat");
-    const lbTitle = document.getElementById("lbTitle");
-    const lbCurrent = document.getElementById("lbCurrent");
-    const lbTotal = document.getElementById("lbTotal");
-
-    let currentIndex = 0;
-    let visibleItems = [];
-
-    function openLightbox(index) {
-      visibleItems = items.filter((i) => i.style.display !== "none");
-      currentIndex = index;
-      showSlide(currentIndex);
-      lightbox.classList.add("open");
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeLightbox() {
-      lightbox.classList.remove("open");
-      document.body.style.overflow = "";
-    }
-
-    function showSlide(idx) {
-      const el = visibleItems[idx];
-      if (!el) return;
-      lbImg.src = el.dataset.src;
-      lbCat.textContent = el.dataset.catLabel;
-      lbTitle.textContent = el.dataset.title;
-      lbCurrent.textContent = String(idx + 1).padStart(2, "0");
-      lbTotal.textContent = String(visibleItems.length).padStart(2, "0");
-      currentIndex = idx;
-    }
-
-    items.forEach((item, i) => {
-      item.addEventListener("click", () => {
-        visibleItems = items.filter((it) => it.style.display !== "none");
-        const visIdx = visibleItems.indexOf(item);
-        openLightbox(visIdx >= 0 ? visIdx : 0);
-      });
-    });
-
-    document.getElementById("lbClose").addEventListener("click", closeLightbox);
-    lightbox.addEventListener("click", (e) => {
-      if (e.target === lightbox) closeLightbox();
-    });
-
-    document.getElementById("lbPrev").addEventListener("click", () => {
-      showSlide((currentIndex - 1 + visibleItems.length) % visibleItems.length);
-    });
-    document.getElementById("lbNext").addEventListener("click", () => {
-      showSlide((currentIndex + 1) % visibleItems.length);
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (!lightbox.classList.contains("open")) return;
-      if (e.key === "Escape") closeLightbox();
-      if (e.key === "ArrowLeft")
-        showSlide(
-          (currentIndex - 1 + visibleItems.length) % visibleItems.length,
+    <script is:inline>
+        /* ── Intersection reveal ── */
+        const io = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((e) => {
+                    if (e.isIntersecting) e.target.classList.add("visible");
+                });
+            },
+            { threshold: 0.12 },
         );
-      if (e.key === "ArrowRight")
-        showSlide((currentIndex + 1) % visibleItems.length);
-    });
+        document
+            .querySelectorAll(".reveal, .stat-item")
+            .forEach((el) => io.observe(el));
 
-    /* featured shot lightbox */
-    document
-      .querySelector(".featured-shot-wrap")
-      .addEventListener("click", () => {
-        visibleItems = items.filter((it) => it.style.display !== "none");
-        openLightbox(0);
-      });
-  </script>
+        /* ── Navbar scroll ── */
+        window.addEventListener("scroll", () => {
+            document.querySelector("nav").style.background =
+                window.scrollY > 60
+                    ? "rgba(10,10,10,0.97)"
+                    : "rgba(10,10,10,0.85)";
+        });
+
+        /* ── Gallery filter ── */
+        const items = Array.from(document.querySelectorAll(".masonry-item"));
+        document.querySelectorAll(".filter-tab").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                document
+                    .querySelectorAll(".filter-tab")
+                    .forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                const filter = btn.dataset.filter;
+                items.forEach((item) => {
+                    const match =
+                        filter === "all" || item.dataset.cat === filter;
+                    item.style.display = match ? "" : "none";
+                });
+            });
+        });
+
+        /* ── Lightbox ── */
+        const lightbox = document.getElementById("lightbox");
+        const lbImg = document.getElementById("lbImg");
+        const lbCat = document.getElementById("lbCat");
+        const lbTitle = document.getElementById("lbTitle");
+        const lbCurrent = document.getElementById("lbCurrent");
+        const lbTotal = document.getElementById("lbTotal");
+
+        let currentIndex = 0;
+        let visibleItems = [];
+
+        function openLightbox(index) {
+            visibleItems = items.filter((i) => i.style.display !== "none");
+            currentIndex = index;
+            showSlide(currentIndex);
+            lightbox.classList.add("open");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove("open");
+            document.body.style.overflow = "";
+        }
+
+        function showSlide(idx) {
+            const el = visibleItems[idx];
+            if (!el) return;
+            lbImg.src = el.dataset.src;
+            lbCat.textContent = el.dataset.catLabel;
+            lbTitle.textContent = el.dataset.title;
+            lbCurrent.textContent = String(idx + 1).padStart(2, "0");
+            lbTotal.textContent = String(visibleItems.length).padStart(2, "0");
+            currentIndex = idx;
+        }
+
+        items.forEach((item, i) => {
+            item.addEventListener("click", () => {
+                visibleItems = items.filter(
+                    (it) => it.style.display !== "none",
+                );
+                const visIdx = visibleItems.indexOf(item);
+                openLightbox(visIdx >= 0 ? visIdx : 0);
+            });
+        });
+
+        document
+            .getElementById("lbClose")
+            .addEventListener("click", closeLightbox);
+        lightbox.addEventListener("click", (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+
+        document.getElementById("lbPrev").addEventListener("click", () => {
+            showSlide(
+                (currentIndex - 1 + visibleItems.length) % visibleItems.length,
+            );
+        });
+        document.getElementById("lbNext").addEventListener("click", () => {
+            showSlide((currentIndex + 1) % visibleItems.length);
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (!lightbox.classList.contains("open")) return;
+            if (e.key === "Escape") closeLightbox();
+            if (e.key === "ArrowLeft")
+                showSlide(
+                    (currentIndex - 1 + visibleItems.length) %
+                        visibleItems.length,
+                );
+            if (e.key === "ArrowRight")
+                showSlide((currentIndex + 1) % visibleItems.length);
+        });
+
+        /* featured shot lightbox */
+        document
+            .querySelector(".featured-shot-wrap")
+            .addEventListener("click", () => {
+                visibleItems = items.filter(
+                    (it) => it.style.display !== "none",
+                );
+                openLightbox(0);
+            });
+    </script>
 </Layout>
