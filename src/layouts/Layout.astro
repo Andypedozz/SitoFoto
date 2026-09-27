@@ -1,22 +1,52 @@
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
+    <head>
+        <meta charset="utf-8" />
 
-		<!-- Favicon -->
-		<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
-		<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
-		<link rel="manifest" href="/favicon/site.webmanifest">
+        <!-- Favicon -->
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="/favicon/apple-touch-icon.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="/favicon/favicon-32x32.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="/favicon/favicon-16x16.png"
+        />
+        <link rel="manifest" href="/favicon/site.webmanifest" />
 
-		<link rel="preconnect" href="https://res.cloudinary.com" />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>UG Action Media</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,600;1,300&display=swap"
+            rel="stylesheet"
+        />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+        <title>UG Action Media</title>
+    </head>
+    <script>
+        import Lenis from "lenis";
+        import "lenis/dist/lenis.css";
+
+        const lenis = new Lenis({
+            duration: 1.5,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smoothWheel: true,
+            wheelMultiplier: 0.7,
+            touchMultiplier: 1,
+            autoRaf: true,
+        });
+    </script>
+    <body>
+        <slot />
+    </body>
 </html>
